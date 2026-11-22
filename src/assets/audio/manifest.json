@@ -1,0 +1,187 @@
+{
+  "city.student.default": {
+    "kind": "student",
+    "sec": 4.93,
+    "text": "我发现很多设备都能自动工作，它们一定都是人工智能吗？"
+  },
+  "city.student.explore": {
+    "kind": "student",
+    "sec": 5.56,
+    "text": "我想一个一个点开看看：它们接收了什么信息，又是怎样处理的？"
+  },
+  "city.student.match": {
+    "kind": "student",
+    "sec": 3.82,
+    "text": "原来每个设备都可以用“输入—处理—输出”来描述！"
+  },
+  "city.student.wrap": {
+    "kind": "student",
+    "sec": 5.11,
+    "text": "自动工作不等于人工智能，关键要看它是怎样处理信息的。"
+  },
+  "city.guide.default": {
+    "kind": "robot",
+    "sec": 6.73,
+    "text": "自动运行并不一定意味着使用人工智能。我们可以观察设备处理信息的方式。"
+  },
+  "city.guide.explore": {
+    "kind": "robot",
+    "sec": 6.77,
+    "text": "试着比较：它是按照固定规则办事，还是依靠从大量数据中训练出来的模型？"
+  },
+  "city.guide.match": {
+    "kind": "robot",
+    "sec": 6.21,
+    "text": "把输入、处理方式和输出拖到对应的位置，看看你能不能把它们配对。"
+  },
+  "city.guide.wrap": {
+    "kind": "robot",
+    "sec": 5.87,
+    "text": "下一页，我们去实验室看看：模型究竟是怎样从数据中“学”出来的。"
+  },
+  "lab.student.default": {
+    "kind": "student",
+    "sec": 6.55,
+    "text": "这些图片里的猫和狗，颜色、姿势、背景都不一样，模型要怎样才能分清呢？"
+  },
+  "lab.student.label": {
+    "kind": "student",
+    "sec": 5.9,
+    "text": "我来给每张图片贴上标签。要是贴错了，模型会不会被我带偏？"
+  },
+  "lab.student.train": {
+    "kind": "student",
+    "sec": 5.15,
+    "text": "主机屏幕上的数字一直在变，模型是在一点点调整自己吗？"
+  },
+  "lab.student.test": {
+    "kind": "student",
+    "sec": 5.13,
+    "text": "模型已经学会分类了吗？为什么有些新图片仍然会判断错误？"
+  },
+  "lab.student.compare": {
+    "kind": "student",
+    "sec": 5.38,
+    "text": "如果训练数据变了，同一批测试图片的结果会不会也跟着变？"
+  },
+  "lab.student.wrap": {
+    "kind": "student",
+    "sec": 5.2,
+    "text": "原来模型学到什么，很大程度上取决于我们给它什么样的数据。"
+  },
+  "lab.mentor.default": {
+    "kind": "teacher",
+    "sec": 5.56,
+    "text": "先观察数据。训练集用来让模型学习，测试集留着最后检验它。"
+  },
+  "lab.mentor.label": {
+    "kind": "teacher",
+    "sec": 5.59,
+    "text": "标签就是告诉模型的“已知答案”。认真标注，是训练出好模型的第一步。"
+  },
+  "lab.mentor.train": {
+    "kind": "teacher",
+    "sec": 6.08,
+    "text": "训练时，算法会反复比较模型的猜测和你给的标签，再一点点调整模型。"
+  },
+  "lab.mentor.test": {
+    "kind": "teacher",
+    "sec": 5.51,
+    "text": "我们需要用没有参与训练的数据测试它，才能更好地了解模型的表现。"
+  },
+  "lab.mentor.compare": {
+    "kind": "teacher",
+    "sec": 7.14,
+    "text": "改变数据条件，再用同一组测试图片比较。结果由真实的训练决定，多做几次看看。"
+  },
+  "lab.mentor.wrap": {
+    "kind": "teacher",
+    "sec": 4.42,
+    "text": "记住：模型的预测不是对事物的绝对理解，它也会出错。"
+  },
+  "verify.student.default": {
+    "kind": "student",
+    "sec": 4.2,
+    "text": "这段回答听起来很有道理，但我怎么知道它是真的？"
+  },
+  "verify.student.evidence": {
+    "kind": "student",
+    "sec": 4.86,
+    "text": "我先把回答里能核查的说法找出来，再一条一条对证据。"
+  },
+  "verify.student.revise": {
+    "kind": "student",
+    "sec": 4.9,
+    "text": "有问题的地方不能照抄，我得把它改成符合证据的说法。"
+  },
+  "verify.student.usage": {
+    "kind": "student",
+    "sec": 4.05,
+    "text": "AI 可以帮我很多忙，但有些事必须我自己来判断。"
+  },
+  "verify.student.wrap": {
+    "kind": "student",
+    "sec": 4.12,
+    "text": "以后看到 AI 的回答，我会先问一句：证据在哪里？"
+  },
+  "verify.teacher.default": {
+    "kind": "teacher",
+    "sec": 5.11,
+    "text": "先找到其中可以核查的主张，再看看有哪些可靠证据支持它。"
+  },
+  "verify.teacher.evidence": {
+    "kind": "teacher",
+    "sec": 4.24,
+    "text": "注意区分：哪些材料与主张有关，哪些只是看起来相关。"
+  },
+  "verify.teacher.revise": {
+    "kind": "teacher",
+    "sec": 4.44,
+    "text": "证据不够时，说“目前还不能确定”比硬下结论更负责任。"
+  },
+  "verify.teacher.usage": {
+    "kind": "teacher",
+    "sec": 4.9,
+    "text": "重要信息要核验，个人隐私要保护，学习的责任在你自己。"
+  },
+  "verify.teacher.wrap": {
+    "kind": "teacher",
+    "sec": 4.5,
+    "text": "会提问、会核验、会判断，才是真正会用人工智能。"
+  },
+  "verify.assistant.default": {
+    "kind": "robot",
+    "sec": 6.22,
+    "text": "我的回答可能存在错误。对重要信息，请结合可靠来源进行判断。"
+  },
+  "verify.assistant.evidence": {
+    "kind": "robot",
+    "sec": 6.73,
+    "text": "我给出的内容需要你来核验。请对照证据，看看我哪里说对了、哪里说错了。"
+  },
+  "verify.assistant.revise": {
+    "kind": "robot",
+    "sec": 6.33,
+    "text": "谢谢你帮我指出问题。把“所有”“已经证明”改得更准确，会更接近事实。"
+  },
+  "verify.assistant.usage": {
+    "kind": "robot",
+    "sec": 6.32,
+    "text": "我可以帮你查线索、换种方式讲解、提修改建议，但结论和责任属于你。"
+  },
+  "verify.assistant.wrap": {
+    "kind": "robot",
+    "sec": 2.86,
+    "text": "请继续保持怀疑和求证的习惯。"
+  },
+  "summary.student.default": {
+    "kind": "student",
+    "sec": 4.31,
+    "text": "回头看看，我已经能自己分辨、训练和核验了！"
+  },
+  "summary.guide.default": {
+    "kind": "robot",
+    "sec": 5.49,
+    "text": "祝贺你完成探索。记住：了解人工智能的本领，也了解它的局限。"
+  }
+}

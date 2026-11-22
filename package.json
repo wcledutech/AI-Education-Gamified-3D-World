@@ -1,0 +1,23 @@
+{
+  "name": "hello-ai",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Hello, AI！走进人工智能的世界 —— 3D 互动立体纸艺人工智能通识教材",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:single": "vite build --mode single",
+    "preview": "vite preview",
+    "deploy": "vite build && node tools/deploy.mjs"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
+    "gsap": "^3.12.5",
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.11",
+    "vite-plugin-singlefile": "^2.0.3"
+  }
+}
