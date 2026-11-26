@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { FONT_CN } from './config.js';
+import { T } from './i18n.js';
 
 const matCache = new Map();
 /** 带缓存的哑光“纸张”材质 */
@@ -93,19 +94,27 @@ export function roundRect(ctx, x, y, w, h, r) {
 }
 /** 自动换行绘制文字，返回结束的 y */
 export function wrapText(ctx, text, x, y, maxW, lineH, maxLines = 99) {
+  // 中文按字换行；英文单词、数字等连续的西文字符不拆开
+  const tokens = text.match(/[\x21-\x7e]+|\s|[^\x00-\x7f]/g) || [];
   let line = '';
   let n = 0;
-  for (const ch of text) {
-    if (ch === '\n' || ctx.measureText(line + ch).width > maxW) {
-      ctx.fillText(line, x, y);
-      y += lineH;
-      n += 1;
-      line = ch === '\n' ? '' : ch;
+  const flush = () => {
+    ctx.fillText(line.trimEnd(), x, y);
+    y += lineH;
+    n += 1;
+    line = '';
+  };
+  for (const tk of tokens) {
+    const isSpace = /^\s$/.test(tk);
+    if (tk === '\n' || (line && ctx.measureText(line + tk).width > maxW)) {
+      flush();
       if (n >= maxLines) return y;
-    } else line += ch;
+      if (isSpace) continue;
+    }
+    if (line || !isSpace) line += tk;
   }
-  if (line) {
-    ctx.fillText(line, x, y);
+  if (line.trim()) {
+    ctx.fillText(line.trimEnd(), x, y);
     y += lineH;
   }
   return y;
@@ -123,21 +132,34 @@ export class CanvasPanel {
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
     this.mesh.userData.noOutline = true;
     this.mesh.receiveShadow = lit;
+    PANELS.add(this);
   }
+  /** 记住绘制函数；切换语言时会用它重画一遍 */
   draw(fn) {
+    this._fn = fn;
+    return this.redraw();
+  }
+  redraw() {
+    if (!this._fn) return this;
     const { ctx, canvas } = this;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    fn(ctx, canvas.width, canvas.height);
+    this._fn(ctx, canvas.width, canvas.height);
     this.tex.needsUpdate = true;
     return this;
   }
 }
+const PANELS = new Set();
+/** 重画全部带文字的画布（语言切换后调用） */
+export function redrawAllPanels() {
+  PANELS.forEach((p) => p.redraw());
+}
 
-/** 文字标牌（一次性绘制） */
-export function sign(text, { w = 1.2, h = 0.32, bg = '#F7F2E6', fg = '#34434A', font = FONT_CN, weight = 700, size = 0.6, border = null, radius = 0.25, lit = true } = {}) {
+/** 文字标牌。text 可以是字符串，也可以是 [中文, English] */
+export function sign(textIn, { w = 1.2, h = 0.32, bg = '#F7F2E6', fg = '#34434A', font = FONT_CN, weight = 700, size = 0.6, border = null, radius = 0.25, lit = true } = {}) {
   const p = new CanvasPanel(w, h, { ppu: 220, lit });
   p.draw((ctx, W, H) => {
+    const text = Array.isArray(textIn) ? T(textIn[0], textIn[1]) : textIn;
     if (bg) {
       ctx.fillStyle = bg;
       roundRect(ctx, 2, 2, W - 4, H - 4, H * radius);

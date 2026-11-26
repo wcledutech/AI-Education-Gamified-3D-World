@@ -28,7 +28,7 @@ export class BaseScene {
     return p;
   }
 
-  clickable(root, { id, label, hint = '点击查看', onClick }) {
+  clickable(root, { id, label, hint = ['点击查看', 'Click to view'], onClick }) {
     addOutline(root);
     const t = { id, root, label, hint, onClick, active: true };
     root.userData.interactive = t;
@@ -41,11 +41,12 @@ export class BaseScene {
     ch.setYaw(yaw);
     const p = this.pop(ch.group, x, z, { order, dir: 'back' });
     ch.popup = p;
+    ch.def = this.def; // 姓名与身份随语言从场景定义里取
     this.characters[ch.id] = ch;
     this.clickable(ch.group, {
       id: 'char:' + ch.id,
-      label: `${ch.name} · ${ch.role}`,
-      hint: '点击对话',
+      label: () => `${ch.name} · ${ch.role}`,
+      hint: ['点击对话', 'Click to talk'],
       onClick: () => this.onCharacter(ch),
     });
     return ch;

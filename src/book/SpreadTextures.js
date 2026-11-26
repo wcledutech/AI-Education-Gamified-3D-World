@@ -1,5 +1,6 @@
 // 每个跨页的“印刷面”：纸张底纹 + 场景地面印刷 + 页眉标题。
 // 场景地面同时用作立体舞台的顶面贴图，舞台收拢后与书页印刷无缝衔接。
+// 每个跨页都保留自己的画布，切换语言时调用 repaint() 重新印刷。
 import * as THREE from 'three';
 import { BOOK, STAGE, WING, COLORS, FONT_KAI, FONT_SERIF, FONT_CN } from '../utils/config.js';
 import { makeCanvas, canvasTex } from '../utils/three-helpers.js';
@@ -18,100 +19,121 @@ function paperBase(ctx, w, h, seed0) {
   }
 }
 
+/** 设置字体；文字超过 maxW 时自动缩小字号（英文标题通常更长） */
+function fitFont(ctx, text, weight, px, family, maxW) {
+  ctx.font = `${weight} ${px}px ${family}`;
+  const w = ctx.measureText(text).width;
+  if (w > maxW) ctx.font = `${weight} ${(px * maxW) / w}px ${family}`;
+}
+
 /**
- * @param {Array} defs [{ unit, title, question, drawGround(ctx,w,h) }]
- * @returns [{ left, right, leftMirror, ground }]
+ * @param {Array} defs [{ def: 场景定义（含 unit / title / question，随语言变化）, drawGround(ctx,w,h,P) }]
+ * @returns [{ left, right, leftMirror, ground, repaint() }]
  */
 export function buildSpreadTextures(defs) {
-  return defs.map((def, i) => {
-    // 场景地面
-    const ground = makeCanvas(STAGE.SX * P, STAGE.SZ * P);
-    def.drawGround(ground.getContext('2d'), ground.width, ground.height, P * STAGE.K);
-
+  return defs.map(({ def, drawGround }, i) => {
+    const groundCanvas = makeCanvas(STAGE.SX * P, STAGE.SZ * P);
     const full = makeCanvas(W * 2 * P, D * P);
-    const ctx = full.getContext('2d');
-    paperBase(ctx, full.width, full.height, 31 + i * 7);
+    const leftCanvas = makeCanvas(W * P, D * P);
+    const rightCanvas = makeCanvas(W * P, D * P);
 
-    // 书口阴影
-    const cx = W * P;
-    const gut = ctx.createLinearGradient(cx - 90, 0, cx + 90, 0);
-    gut.addColorStop(0, 'rgba(120,100,70,0)');
-    gut.addColorStop(0.5, 'rgba(120,100,70,0.20)');
-    gut.addColorStop(1, 'rgba(120,100,70,0)');
-    ctx.fillStyle = gut;
-    ctx.fillRect(cx - 90, 0, 180, full.height);
+    const paint = () => {
+      // 场景地面
+      const gctx = groundCanvas.getContext('2d');
+      gctx.setTransform(1, 0, 0, 1, 0, 0);
+      gctx.clearRect(0, 0, groundCanvas.width, groundCanvas.height);
+      drawGround(gctx, groundCanvas.width, groundCanvas.height, P * STAGE.K);
 
-    // 立页的“裁切线”印记
-    [-1, 1].forEach((sgn) => {
+      const ctx = full.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.setLineDash([]);
+      paperBase(ctx, full.width, full.height, 31 + i * 7);
+
+      // 书口阴影
+      const cx = W * P;
+      const gut = ctx.createLinearGradient(cx - 90, 0, cx + 90, 0);
+      gut.addColorStop(0, 'rgba(120,100,70,0)');
+      gut.addColorStop(0.5, 'rgba(120,100,70,0.20)');
+      gut.addColorStop(1, 'rgba(120,100,70,0)');
+      ctx.fillStyle = gut;
+      ctx.fillRect(cx - 90, 0, 180, full.height);
+
+      // 立页的“裁切线”印记
+      [-1, 1].forEach((sgn) => {
+        ctx.save();
+        ctx.translate((sgn * WING.X + W) * P, (WING.Z + D / 2) * P);
+        ctx.rotate(sgn * WING.YAW); // 俯视图中的旋转方向与绕 Y 轴相反
+        ctx.strokeStyle = 'rgba(120,105,80,0.30)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 8]);
+        ctx.strokeRect((-WING.W / 2) * P, -WING.H * P, WING.W * P, WING.H * P);
+        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+        ctx.fillRect((-WING.W / 2) * P, -WING.H * P, WING.W * P, WING.H * P);
+        ctx.restore();
+      });
+
+      // 舞台地面印刷
+      const sx = (-STAGE.SX / 2 + W) * P;
+      const sy = (STAGE.CZ - STAGE.SZ / 2 + D / 2) * P;
       ctx.save();
-      ctx.translate((sgn * WING.X + W) * P, (WING.Z + D / 2) * P);
-      ctx.rotate(sgn * WING.YAW); // 俯视图中的旋转方向与绕 Y 轴相反
-      ctx.strokeStyle = 'rgba(120,105,80,0.30)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([10, 8]);
-      ctx.strokeRect((-WING.W / 2) * P, -WING.H * P, WING.W * P, WING.H * P);
-      ctx.fillStyle = 'rgba(255,255,255,0.28)';
-      ctx.fillRect((-WING.W / 2) * P, -WING.H * P, WING.W * P, WING.H * P);
+      ctx.shadowColor = 'rgba(90,75,50,0.25)';
+      ctx.shadowBlur = 10;
+      ctx.drawImage(groundCanvas, sx, sy);
       ctx.restore();
-    });
+      ctx.strokeStyle = 'rgba(120,105,80,0.35)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(sx, sy, groundCanvas.width, groundCanvas.height);
 
-    // 舞台地面印刷
-    const sx = (-STAGE.SX / 2 + W) * P;
-    const sy = (STAGE.CZ - STAGE.SZ / 2 + D / 2) * P;
-    ctx.save();
-    ctx.shadowColor = 'rgba(90,75,50,0.25)';
-    ctx.shadowBlur = 10;
-    ctx.drawImage(ground, sx, sy);
-    ctx.restore();
-    ctx.strokeStyle = 'rgba(120,105,80,0.35)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(sx, sy, ground.width, ground.height);
+      // 页眉标题（印在书页近端）
+      const ty = (D - 1.25) * P;
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = COLORS.coralDark;
+      ctx.font = `700 ${0.3 * P}px ${FONT_SERIF}`;
+      ctx.textAlign = 'left';
+      ctx.fillText(def.unit, 0.75 * P, ty - 0.62 * P);
+      ctx.fillStyle = COLORS.ink;
+      fitFont(ctx, def.title, 700, 0.95 * P, FONT_KAI, (W - 1.5) * P);
+      ctx.fillText(def.title, 0.7 * P, ty + 0.12 * P);
+      ctx.textAlign = 'right';
+      fitFont(ctx, def.question, 600, 0.62 * P, FONT_KAI, (W - 1.6) * P);
+      ctx.fillStyle = COLORS.inkSoft;
+      ctx.fillText(def.question, (W * 2 - 0.75) * P, ty + 0.12 * P);
+      // 细装饰线与页码
+      ctx.strokeStyle = 'rgba(52,67,74,0.35)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(0.7 * P, ty + 0.72 * P);
+      ctx.lineTo((W - 0.6) * P, ty + 0.72 * P);
+      ctx.moveTo((W + 0.6) * P, ty + 0.72 * P);
+      ctx.lineTo((W * 2 - 0.7) * P, ty + 0.72 * P);
+      ctx.stroke();
+      ctx.font = `500 ${0.22 * P}px ${FONT_CN}`;
+      ctx.fillStyle = 'rgba(52,67,74,0.6)';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${i * 2 + 2}`, 0.75 * P, ty + 0.98 * P);
+      ctx.textAlign = 'right';
+      ctx.fillText(`${i * 2 + 3}`, (W * 2 - 0.75) * P, ty + 0.98 * P);
 
-    // 页眉标题（印在书页近端）
-    const ty = (D - 1.25) * P;
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = COLORS.coralDark;
-    ctx.font = `700 ${0.3 * P}px ${FONT_SERIF}`;
-    ctx.textAlign = 'left';
-    ctx.fillText(def.unit, 0.75 * P, ty - 0.62 * P);
-    ctx.fillStyle = COLORS.ink;
-    ctx.font = `700 ${0.95 * P}px ${FONT_KAI}`;
-    ctx.fillText(def.title, 0.7 * P, ty + 0.12 * P);
-    ctx.textAlign = 'right';
-    ctx.font = `600 ${0.62 * P}px ${FONT_KAI}`;
-    ctx.fillStyle = COLORS.inkSoft;
-    ctx.fillText(def.question, (W * 2 - 0.75) * P, ty + 0.12 * P);
-    // 细装饰线与页码
-    ctx.strokeStyle = 'rgba(52,67,74,0.35)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([]);
-    ctx.beginPath();
-    ctx.moveTo(0.7 * P, ty + 0.72 * P);
-    ctx.lineTo((W - 0.6) * P, ty + 0.72 * P);
-    ctx.moveTo((W + 0.6) * P, ty + 0.72 * P);
-    ctx.lineTo((W * 2 - 0.7) * P, ty + 0.72 * P);
-    ctx.stroke();
-    ctx.font = `500 ${0.22 * P}px ${FONT_CN}`;
-    ctx.fillStyle = 'rgba(52,67,74,0.6)';
-    ctx.textAlign = 'left';
-    ctx.fillText(`${i * 2 + 2}`, 0.75 * P, ty + 0.98 * P);
-    ctx.textAlign = 'right';
-    ctx.fillText(`${i * 2 + 3}`, (W * 2 - 0.75) * P, ty + 0.98 * P);
-
-    // 拆成左右两页
-    const half = (x0) => {
-      const c = makeCanvas(W * P, D * P);
-      c.getContext('2d').drawImage(full, x0, 0, W * P, D * P, 0, 0, W * P, D * P);
-      return canvasTex(c);
+      // 拆成左右两页
+      leftCanvas.getContext('2d').drawImage(full, 0, 0, W * P, D * P, 0, 0, W * P, D * P);
+      rightCanvas.getContext('2d').drawImage(full, W * P, 0, W * P, D * P, 0, 0, W * P, D * P);
     };
-    const left = half(0);
-    const right = half(W * P);
+
+    paint();
+    const left = canvasTex(leftCanvas);
+    const right = canvasTex(rightCanvas);
+    const ground = canvasTex(groundCanvas);
     const leftMirror = left.clone();
     leftMirror.wrapS = THREE.RepeatWrapping;
     leftMirror.repeat.x = -1;
     leftMirror.offset.x = 1;
     leftMirror.needsUpdate = true;
-    return { left, right, leftMirror, ground: canvasTex(ground) };
+    const repaint = () => {
+      paint();
+      [left, right, ground, leftMirror].forEach((t) => (t.needsUpdate = true));
+    };
+    return { left, right, leftMirror, ground, repaint };
   });
 }
 

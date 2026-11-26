@@ -1,0 +1,224 @@
+{
+  "city.student.default": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 5,
+    "text": "I notice lots of devices can work by themselves. Does that mean they are all AI?"
+  },
+  "city.student.explore": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 4.67,
+    "text": "I want to open them one by one: what information do they take in, and how do they handle it?"
+  },
+  "city.student.match": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 4.07,
+    "text": "So every device can be described as input, processing and output!"
+  },
+  "city.student.wrap": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 5.53,
+    "text": "Working automatically is not the same as AI. What matters is how it handles information."
+  },
+  "city.guide.default": {
+    "kind": "robot",
+    "speaker": 1,
+    "sec": 6.8,
+    "text": "Running automatically does not always mean using AI. Let’s look at how each device handles information."
+  },
+  "city.guide.explore": {
+    "kind": "robot",
+    "speaker": 1,
+    "sec": 5.43,
+    "text": "Try comparing: does it follow fixed rules, or rely on a model trained from lots of data?"
+  },
+  "city.guide.match": {
+    "kind": "robot",
+    "speaker": 1,
+    "sec": 5.27,
+    "text": "Drag each input, process and output to the right place and see if you can pair them up."
+  },
+  "city.guide.wrap": {
+    "kind": "robot",
+    "speaker": 1,
+    "sec": 5.3,
+    "text": "On the next page we will visit the lab and see how a model actually learns from data."
+  },
+  "lab.student.default": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 6.23,
+    "text": "The cats and dogs in these pictures have different colors, poses and backgrounds. How can a model tell them apart?"
+  },
+  "lab.student.label": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 4.66,
+    "text": "I will put a label on every picture. If I get one wrong, will I lead the model astray?"
+  },
+  "lab.student.train": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 5.04,
+    "text": "The numbers on the screen keep changing. Is the model adjusting itself little by little?"
+  },
+  "lab.student.test": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 4.38,
+    "text": "Has the model learned to classify? Why does it still get some new pictures wrong?"
+  },
+  "lab.student.compare": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 4.67,
+    "text": "If the training data changes, will the results on the same test pictures change too?"
+  },
+  "lab.student.wrap": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 3.2,
+    "text": "So what a model learns depends a lot on the data we give it."
+  },
+  "lab.mentor.default": {
+    "kind": "teacher",
+    "speaker": 3,
+    "sec": 7.19,
+    "text": "Look at the data first. The training set is for the model to learn from. The test set is kept back to check it at the end."
+  },
+  "lab.mentor.label": {
+    "kind": "teacher",
+    "speaker": 3,
+    "sec": 6.44,
+    "text": "A label is the known answer you give the model. Careful labeling is the first step to training a good model."
+  },
+  "lab.mentor.train": {
+    "kind": "teacher",
+    "speaker": 3,
+    "sec": 6.11,
+    "text": "During training, the algorithm keeps comparing the model’s guesses with your labels and adjusts the model bit by bit."
+  },
+  "lab.mentor.test": {
+    "kind": "teacher",
+    "speaker": 3,
+    "sec": 6.03,
+    "text": "We need to test it on data that was not used in training to really understand how well the model performs."
+  },
+  "lab.mentor.compare": {
+    "kind": "teacher",
+    "speaker": 3,
+    "sec": 7.38,
+    "text": "Change the data conditions, then compare using the same test pictures. The results come from real training, so try it more than once."
+  },
+  "lab.mentor.wrap": {
+    "kind": "teacher",
+    "speaker": 3,
+    "sec": 5.52,
+    "text": "Remember: a model’s prediction is not a perfect understanding of the world. It can be wrong."
+  },
+  "verify.student.default": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 3.64,
+    "text": "This answer sounds convincing. But how do I know it is true?"
+  },
+  "verify.student.evidence": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 4.61,
+    "text": "First I will pick out the statements that can be checked, then compare each one with the evidence."
+  },
+  "verify.student.revise": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 4.98,
+    "text": "I should not copy the parts that have problems. I need to rewrite them to match the evidence."
+  },
+  "verify.student.usage": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 3.92,
+    "text": "AI can help me with a lot, but some things I have to judge for myself."
+  },
+  "verify.student.wrap": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 4.76,
+    "text": "From now on, when I see an AI answer, I will first ask: where is the evidence?"
+  },
+  "verify.teacher.default": {
+    "kind": "teacher",
+    "speaker": 7,
+    "sec": 4.61,
+    "text": "First find the claims that can be checked, then see what reliable evidence supports them."
+  },
+  "verify.teacher.evidence": {
+    "kind": "teacher",
+    "speaker": 7,
+    "sec": 4.79,
+    "text": "Notice the difference: which materials really relate to the claim, and which only look related?"
+  },
+  "verify.teacher.revise": {
+    "kind": "teacher",
+    "speaker": 7,
+    "sec": 5.51,
+    "text": "When there is not enough evidence, saying “we cannot be sure yet” is more responsible than forcing a conclusion."
+  },
+  "verify.teacher.usage": {
+    "kind": "teacher",
+    "speaker": 7,
+    "sec": 6.37,
+    "text": "Verify important information, protect personal privacy, and remember that your learning is your own responsibility."
+  },
+  "verify.teacher.wrap": {
+    "kind": "teacher",
+    "speaker": 7,
+    "sec": 4.83,
+    "text": "Knowing how to ask, how to check and how to judge is what it really means to use AI well."
+  },
+  "verify.assistant.default": {
+    "kind": "robot",
+    "speaker": 1,
+    "sec": 6.77,
+    "text": "My answers may contain mistakes. For important information, please check reliable sources before you decide."
+  },
+  "verify.assistant.evidence": {
+    "kind": "robot",
+    "speaker": 1,
+    "sec": 6.44,
+    "text": "What I say needs to be verified by you. Compare it with the evidence and see where I am right and where I am wrong."
+  },
+  "verify.assistant.revise": {
+    "kind": "robot",
+    "speaker": 1,
+    "sec": 7.4,
+    "text": "Thank you for pointing out the problem. Making words like “all” and “has been proved” more precise brings the answer closer to the facts."
+  },
+  "verify.assistant.usage": {
+    "kind": "robot",
+    "speaker": 1,
+    "sec": 7.63,
+    "text": "I can help you find leads, explain things another way and suggest edits, but the conclusions and the responsibility are yours."
+  },
+  "verify.assistant.wrap": {
+    "kind": "robot",
+    "speaker": 1,
+    "sec": 2.41,
+    "text": "Please keep questioning and keep checking."
+  },
+  "summary.student.default": {
+    "kind": "student",
+    "speaker": 4,
+    "sec": 4.94,
+    "text": "Looking back, I can now tell AI apart, train a model and check the facts by myself!"
+  },
+  "summary.guide.default": {
+    "kind": "robot",
+    "speaker": 1,
+    "sec": 7.46,
+    "text": "Congratulations on finishing your exploration. Remember to understand both what AI can do and where its limits are."
+  }
+}

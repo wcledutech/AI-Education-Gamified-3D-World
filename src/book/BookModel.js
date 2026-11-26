@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { BOOK, PAGE_TOP, COLORS, FONT_KAI, FONT_SERIF, FONT_CN } from '../utils/config.js';
 import { makeCanvas, canvasTex, roundRect, shadow } from '../utils/three-helpers.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { T as tr } from '../utils/i18n.js'; // 这个文件里 T 已用作书页厚度，所以取别名
 
 const { W, D, COVER, OV, T } = BOOK;
 const CW = W + OV; // 封面宽
@@ -44,10 +45,12 @@ function pageEdgeTexture() {
 }
 
 /** 封面压印图案（透明底，叠在布面上） */
-function coverArt() {
+function coverArt(existing) {
   const P = 120; // px / 单位
-  const c = makeCanvas(CW * P, CD * P);
+  const c = existing || makeCanvas(CW * P, CD * P);
   const ctx = c.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, c.width, c.height);
   const Wp = c.width;
   const Hp = c.height;
   const emboss = (draw, depth = 2) => {
@@ -93,8 +96,8 @@ function coverArt() {
   }, 3);
   emboss((col) => {
     ctx.fillStyle = col || '#4B4326';
-    ctx.font = `600 ${0.56 * P}px ${FONT_KAI}`;
-    ctx.fillText('走进人工智能的世界', cx, 3.12 * P);
+    ctx.font = `600 ${tr(0.56, 0.47) * P}px ${FONT_KAI}`;
+    ctx.fillText(tr('走进人工智能的世界', 'Step into the World of AI'), cx, 3.12 * P);
   }, 1.5);
   ctx.fillStyle = 'rgba(95,75,25,0.85)';
   ctx.font = `600 ${0.2 * P}px ${FONT_SERIF}`;
@@ -196,13 +199,13 @@ function coverArt() {
   // 副标题
   emboss((col) => {
     ctx.fillStyle = col || '#4B4326';
-    ctx.font = `500 ${0.34 * P}px ${FONT_KAI}`;
-    ctx.fillText('一本可以探索的人工智能立体书', cx, 9.55 * P);
+    ctx.font = `500 ${tr(0.34, 0.3) * P}px ${FONT_KAI}`;
+    ctx.fillText(tr('一本可以探索的人工智能立体书', 'A pop-up book about AI that you can explore'), cx, 9.55 * P);
   }, 1.2);
   ctx.fillStyle = 'rgba(95,75,25,0.8)';
   ctx.font = `600 ${0.17 * P}px ${FONT_CN}`;
-  ctx.fillText('初中人工智能通识 · 立体纸艺互动教材', cx, 10.15 * P);
-  return canvasTex(c);
+  ctx.fillText(tr('初中人工智能通识 · 立体纸艺互动教材', 'AI literacy for middle school · interactive pop-up textbook'), cx, 10.15 * P);
+  return c;
 }
 
 function endpaperTexture() {
@@ -307,9 +310,11 @@ export class BookModel {
     // 封面图案：放在“合书朝向”的容器里，合上时正好朝上、正向可读
     const artHolder = new THREE.Group();
     artHolder.rotation.z = Math.PI;
+    this.coverCanvas = coverArt();
+    this.coverTex = canvasTex(this.coverCanvas);
     const art = new THREE.Mesh(
       new THREE.PlaneGeometry(CW, CD),
-      new THREE.MeshStandardMaterial({ map: coverArt(), transparent: true, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2 })
+      new THREE.MeshStandardMaterial({ map: this.coverTex, transparent: true, roughness: 0.8, polygonOffset: true, polygonOffsetFactor: -2 })
     );
     art.rotation.x = -Math.PI / 2;
     art.position.set(CW / 2, PAGE_TOP + 0.002, 0);
@@ -358,6 +363,12 @@ export class BookModel {
     this.spine.visible = len > 0.04;
     this.spine.rotation.z = Math.atan2(-bx, by);
     this.spine.scale.y = Math.max(len, 0.001);
+  }
+
+  /** 语言切换后重新绘制封面文字 */
+  redrawCover() {
+    coverArt(this.coverCanvas);
+    this.coverTex.needsUpdate = true;
   }
 
   setPrints(left, right) {

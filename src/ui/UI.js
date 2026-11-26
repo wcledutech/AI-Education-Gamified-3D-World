@@ -1,22 +1,32 @@
 // 界面外壳：加载页、左右内页容器、底部控制栏、目录 / 探索记录 / 学习帮助弹层、提示与字幕。
 import { SPREADS, COURSE } from '../learning/LessonData.js';
-import { buildReport, reportToText } from '../learning/Assessment.js';
+import { buildReport } from '../learning/Assessment.js';
 import { esc } from './SceneUI.js';
+import { exportRecord } from './SummaryUI.js';
+import { T } from '../utils/i18n.js';
 
-const BAR = [
-  ['toc', '☰', '目录'],
-  ['prev', '‹', '上一页'],
+/** 控制栏按钮：[id, 图标, 文字]。语言按钮显示的是“可以切换到的语言”。 */
+const barItems = () => [
+  ['toc', '☰', T('目录', 'Contents')],
+  ['prev', '‹', T('上一页', 'Prev')],
   ['page', '', ''],
-  ['next', '›', '下一页'],
+  ['next', '›', T('下一页', 'Next')],
   ['sep'],
-  ['reset', '⌂', '重置视角'],
-  ['rotate', '⟳', '旋转视角'],
-  ['center', '◎', '专注实验'],
+  ['reset', '⌂', T('重置视角', 'Reset view')],
+  ['rotate', '⟳', T('旋转视角', 'Rotate')],
+  ['center', '◎', T('专注实验', 'Focus')],
   ['sep'],
-  ['voice', '♪', '语音'],
-  ['records', '✎', '探索记录'],
-  ['help', '?', '学习帮助'],
+  ['voice', '♪', T('语音', 'Voice')],
+  ['records', '✎', T('探索记录', 'Log')],
+  ['help', '?', T('学习帮助', 'Help')],
+  ['sep'],
+  ['lang', T('A', '文'), T('English', '中文')],
 ];
+const barHtml = () =>
+  barItems()
+    .map(([id, icon, label]) => (id === 'sep' ? '<i class="sep"></i>' : id === 'page' ? '<span id="bar-page">1 / 4</span>' : `<button data-bar="${id}" title="${label}"><em>${icon}</em><span>${label}</span></button>`))
+    .join('');
+const hintHtml = () => `<b>${T('点击封面，打开这本书', 'Click the cover to open the book')}</b><span>${T('拖动可以从不同角度观察 · 滚轮缩放', 'Drag to look around · scroll to zoom')}</span>`;
 
 export class UI {
   constructor(app, root) {
@@ -24,22 +34,26 @@ export class UI {
     this.current = null;
     root.insertAdjacentHTML(
       'beforeend',
-      `<div id="loader"><div class="ld-card"><div class="ld-title">HELLO, AI!</div><div class="ld-sub">${esc(COURSE.subtitle)}</div><div class="pbar"><i id="ld-bar"></i></div><div id="ld-text">正在准备…</div></div></div>
-       <div id="start-hint" class="hidden"><b>点击封面，打开这本书</b><span>拖动可以从不同角度观察 · 滚轮缩放</span></div>
+      `<div id="loader"><div class="ld-card"><div class="ld-title">HELLO, AI!</div><div class="ld-sub">${esc(COURSE.subtitle)}</div><div class="pbar"><i id="ld-bar"></i></div><div id="ld-text">${T('正在准备…', 'Getting ready…')}</div></div></div>
+       <div id="start-hint" class="hidden">${hintHtml()}</div>
+       <button id="lang-chip" class="hidden" data-lang-switch></button>
        <div id="caption" class="hidden"></div>
-       <nav id="bar" class="hidden">${BAR.map(([id, icon, label]) => (id === 'sep' ? '<i class="sep"></i>' : id === 'page' ? '<span id="bar-page">1 / 4</span>' : `<button data-bar="${id}" title="${label}"><em>${icon}</em><span>${label}</span></button>`)).join('')}</nav>
+       <nav id="bar" class="hidden">${barHtml()}</nav>
        <div id="tooltip"></div><div id="toast"></div>
        <div id="modal" class="hidden"><div class="modal-card"><button class="icon-btn close" data-modal-close>×</button><div id="modal-body"></div></div></div>`
     );
     const $ = (s) => root.querySelector(s);
     this.loader = $('#loader');
     this.hint = $('#start-hint');
+    this.langChip = $('#lang-chip');
     this.bar = $('#bar');
     this.tooltip = $('#tooltip');
     this.toastEl = $('#toast');
     this.captionEl = $('#caption');
     this.modal = $('#modal');
     this.modalBody = $('#modal-body');
+    this.langChip.textContent = T('English', '中文');
+    this.langChip.addEventListener('click', () => app.switchLang());
 
     // 左右内页（由 CSS3DRenderer 挂到三维空间里）
     const mkPage = (side) => {
@@ -124,11 +138,28 @@ export class UI {
   }
   loadError(msg) {
     this.loader.classList.add('error');
-    this.loader.querySelector('#ld-text').innerHTML = `<b>加载失败</b><br>${esc(msg)}<br><small>请使用新版 Chrome 或 Edge 浏览器，并确认已开启硬件加速（WebGL）。</small>`;
+    this.loader.querySelector('#ld-text').innerHTML = `<b>${T('加载失败', 'Loading failed')}</b><br>${esc(msg)}<br><small>${T(
+      '请使用新版 Chrome 或 Edge 浏览器，并确认已开启硬件加速（WebGL）。',
+      'Please use a recent version of Chrome or Edge and make sure hardware acceleration (WebGL) is enabled.'
+    )}</small>`;
   }
   ready() {
     this.loader.classList.add('hidden');
     this.hint.classList.remove('hidden');
+    this.langChip.classList.remove('hidden');
+  }
+
+  /** 语言切换后，更新不随页面重绘的固定文字 */
+  applyLang() {
+    document.title = COURSE.title;
+    this.hint.innerHTML = hintHtml();
+    this.langChip.textContent = T('English', '中文');
+    this.bar.innerHTML = barHtml();
+    this.captionEl.classList.add('hidden');
+    this.tooltip.classList.remove('show');
+    if (!this.modal.classList.contains('hidden') && this.modalKind) this.modalBody.innerHTML = this[`m_${this.modalKind}`]();
+    this.render();
+    if (this.app.book?.state === 'open') this.updateBar();
   }
 
   // ---------- 页面内容 ----------
@@ -180,11 +211,12 @@ export class UI {
     const busy = app.book.busy;
     set('prev', { disabled: busy || i === 0 });
     const locked = i + 1 < n && !app.state.unlocked(i + 1);
-    set('next', { disabled: busy || i >= n - 1 || locked, title: locked ? '完成本页学习任务后解锁下一页' : '下一页' });
+    set('next', { disabled: busy || i >= n - 1 || locked, title: locked ? T('完成本页学习任务后解锁下一页', 'Finish the tasks on this page to unlock the next one') : T('下一页', 'Next page') });
     set('rotate', { on: app.cam.autoRotate });
     set('center', { on: app.cam.mode === 'center' });
-    set('voice', { on: app.state.data.voice, title: app.state.data.voice ? '语音：开（点击关闭）' : '语音：关（点击开启）' });
+    set('voice', { on: app.state.data.voice, title: app.state.data.voice ? T('语音：开（点击关闭）', 'Voice: on (click to turn off)') : T('语音：关（点击开启）', 'Voice: off (click to turn on)') });
     set('toc', { disabled: busy });
+    set('lang', { title: T('Switch to English', '切换为中文') });
   }
   onBar(id) {
     const app = this.app;
@@ -212,13 +244,15 @@ export class UI {
         d.voice = !d.voice;
         app.speech.setEnabled(d.voice);
         app.state.save();
-        app.toast(d.voice ? '语音朗读已开启' : '语音朗读已关闭');
+        app.toast(d.voice ? T('语音朗读已开启', 'Voice on') : T('语音朗读已关闭', 'Voice off'));
         return this.updateBar();
       }
       case 'records':
         return this.openModal('records');
       case 'help':
         return this.openModal('help');
+      case 'lang':
+        return app.switchLang();
       default:
     }
   }
@@ -234,56 +268,55 @@ export class UI {
   }
   m_toc() {
     const app = this.app;
-    return `<h2>目录</h2><p class="muted">${esc(COURSE.grade)} · ${esc(COURSE.duration)}</p>
+    return `<h2>${T('目录', 'Contents')}</h2><p class="muted">${esc(COURSE.grade)} · ${esc(COURSE.duration)}</p>
       <div class="toc">${SPREADS.map((s, i) => {
         const done = i < 3 ? app.state.data[s.key].done : false;
         const open = app.state.unlocked(i);
-        return `<button class="toc-item ${i === app.book.index ? 'cur' : ''}" data-m="goto" data-i="${i}" ${open ? '' : 'disabled'}><i>${i + 1}</i><div><b>${esc(s.title)}</b><span>${esc(s.question)}</span></div><em>${i === app.book.index ? '当前页' : done ? '已完成' : open ? '可进入' : '未解锁'}</em></button>`;
+        const status = i === app.book.index ? T('当前页', 'Current page') : done ? T('已完成', 'Completed') : open ? T('可进入', 'Open') : T('未解锁', 'Locked');
+        return `<button class="toc-item ${i === app.book.index ? 'cur' : ''}" data-m="goto" data-i="${i}" ${open ? '' : 'disabled'}><i>${i + 1}</i><div><b>${esc(s.title)}</b><span>${esc(s.question)}</span></div><em>${status}</em></button>`;
       }).join('')}</div>
-      <p class="muted">学习路径：认识 AI → 理解 AI → 判断 AI。完成当前页的学习任务后，下一页自动解锁。</p>`;
+      <p class="muted">${T(
+        '学习路径：认识 AI → 理解 AI → 判断 AI。完成当前页的学习任务后，下一页自动解锁。',
+        'Learning path: Meet AI → Understand AI → Evaluate AI. The next page unlocks automatically when you finish the tasks on the current page.'
+      )}</p>`;
   }
   m_records() {
     const data = this.app.state.data;
     const r = buildReport(data);
-    const name = { city: '智慧城市', lab: '训练实验室', verify: '判断中心', summary: '总结' };
-    return `<h2>我的探索记录</h2>
+    const name = { city: T('智慧城市', 'Smart City'), lab: T('训练实验室', 'Training Lab'), verify: T('判断中心', 'Fact-Check Center'), summary: T('总结', 'Summary') };
+    const time = (t) => new Date(t).toLocaleTimeString(T('zh-CN', 'en-US'), { hour: '2-digit', minute: '2-digit' });
+    return `<h2>${T('我的探索记录', 'My exploration log')}</h2>
       <div class="rec-top">${r.scenes.map((s) => `<div class="rep-row ${s.done ? 'ok' : ''}"><b>${s.done ? '✓' : '○'} ${esc(s.title)}</b><span>${esc(s.detail)}</span></div>`).join('')}</div>
       <div class="rec-list">${
         data.log.length
           ? data.log
               .slice()
               .reverse()
-              .map((l) => `<div class="log-item"><em>${name[l.scene] || ''} · ${new Date(l.t).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</em>${esc(l.text)}</div>`)
+              .map((l) => `<div class="log-item"><em>${name[l.scene] || ''} · ${time(l.t)}</em>${esc(l.text)}</div>`)
               .join('')
-          : '<div class="muted">还没有记录。完成预测、实验和判断后，这里会自动记下你的每一步。</div>'
+          : `<div class="muted">${T('还没有记录。完成预测、实验和判断后，这里会自动记下你的每一步。', 'Nothing recorded yet. As you predict, experiment and judge, each step will be noted here automatically.')}</div>`
       }</div>
-      <div class="next-row left"><button class="btn" data-m="export-txt">导出文本</button><button class="btn" data-m="export-json">导出 JSON</button></div>`;
+      <div class="next-row left"><button class="btn" data-m="export-txt">${T('导出文本', 'Export text')}</button><button class="btn" data-m="export-json">${T('导出 JSON', 'Export JSON')}</button></div>`;
   }
   m_help() {
     const d = this.app.state.data;
-    return `<h2>学习帮助</h2>
-      <ul class="help">
-        <li><b>观察</b>按住鼠标拖动可以旋转视角，滚轮缩放；“重置视角”回到默认位置，“专注实验”放大中央的立体场景。</li>
-        <li><b>阅读</b>左页是知识探索，右页是学习实验与反馈。页面右上角的 ⤢ 可以把这一页放大到眼前，再点一次还原。</li>
-        <li><b>互动</b>点击立体场景里的人物和设备；点击左页的重点概念查看说明。</li>
-        <li><b>翻页</b>完成当前页的任务后，下一页自动解锁。也可以用键盘 ← → 翻页。</li>
-        <li><b>语音</b>点击人物会朗读台词（需要浏览器支持中文语音），可在控制栏关闭。</li>
-        <li><b>保存</b>学习进度保存在这台设备的浏览器里；训练出的模型只保存在内存中，刷新页面后需要重新训练。</li>
-      </ul>
-      <div class="help-box"><label><input type="checkbox" data-m="teacher" ${d.teacher ? 'checked' : ''}> 教师模式：解锁全部页面（便于课堂演示）</label>
-      <button class="btn sm ghost" data-m="reset">清除学习进度，重新开始</button></div>`;
+    const items = [
+      [T('观察', 'Look around'), T('按住鼠标拖动可以旋转视角，滚轮缩放；“重置视角”回到默认位置，“专注实验”放大中央的立体场景。', 'Drag with the mouse to rotate the view and use the wheel to zoom. “Reset view” returns to the default position; “Focus” zooms in on the 3D scene in the middle.')],
+      [T('阅读', 'Read'), T('左页是知识探索，右页是学习实验与反馈。页面右上角的 ⤢ 可以把这一页放大到眼前，再点一次还原。', 'The left page is for knowledge; the right page is for experiments and feedback. The ⤢ button at the top right of a page brings it up close; click it again to go back.')],
+      [T('互动', 'Interact'), T('点击立体场景里的人物和设备；点击左页的重点概念查看说明。', 'Click the characters and devices in the 3D scene; click a key concept on the left page to read about it.')],
+      [T('翻页', 'Turn pages'), T('完成当前页的任务后，下一页自动解锁。也可以用键盘 ← → 翻页。', 'The next page unlocks when you finish the tasks on the current page. You can also use the ← → keys.')],
+      [T('语音', 'Voice'), T('点击人物会朗读台词，可在控制栏关闭。', 'Clicking a character plays their line. You can turn voice off in the control bar.')],
+      [T('语言', 'Language'), T('控制栏里的“English”按钮可以随时把整本书切换成英文，再点一次切回中文。', 'The “中文” button in the control bar switches the whole book to Chinese at any time; click it again to return to English.')],
+      [T('保存', 'Saving'), T('学习进度保存在这台设备的浏览器里；训练出的模型只保存在内存中，刷新页面后需要重新训练。', 'Progress is saved in this device’s browser. The trained model is only kept in memory, so it has to be trained again after the page is reloaded.')],
+    ];
+    return `<h2>${T('学习帮助', 'Help')}</h2>
+      <ul class="help">${items.map(([k, v]) => `<li><b>${k}</b>${v}</li>`).join('')}</ul>
+      <div class="help-box"><label><input type="checkbox" data-m="teacher" ${d.teacher ? 'checked' : ''}> ${T('教师模式：解锁全部页面（便于课堂演示）', 'Teacher mode: unlock all pages (handy for classroom demos)')}</label>
+      <button class="btn sm ghost" data-m="reset">${T('清除学习进度，重新开始', 'Clear progress and start over')}</button></div>`;
   }
   onModal(act, d) {
     const app = this.app;
     const data = app.state.data;
-    const dl = (name, text, type) => {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(new Blob([text], { type }));
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    };
     switch (act) {
       case 'goto':
         this.closeModal();
@@ -293,15 +326,15 @@ export class UI {
         app.state.save();
         this.updateBar();
         this.render();
-        return app.toast(data.teacher ? '教师模式已开启：全部页面已解锁' : '教师模式已关闭');
+        return app.toast(data.teacher ? T('教师模式已开启：全部页面已解锁', 'Teacher mode on: all pages are unlocked') : T('教师模式已关闭', 'Teacher mode off'));
       case 'reset':
-        if (!window.confirm('确定要清除这台设备上的全部学习进度吗？此操作不能撤销。')) return;
+        if (!window.confirm(T('确定要清除这台设备上的全部学习进度吗？此操作不能撤销。', 'Clear all learning progress on this device? This cannot be undone.'))) return;
         app.state.reset();
         return window.location.reload();
       case 'export-txt':
-        return dl('hello-ai-学习记录.txt', reportToText(data), 'text/plain;charset=utf-8');
+        return exportRecord('txt', data);
       case 'export-json':
-        return dl('hello-ai-学习记录.json', JSON.stringify({ course: COURSE.title, exportedAt: new Date().toISOString(), report: buildReport(data), progress: data }, null, 2), 'application/json');
+        return exportRecord('json', data);
       default:
     }
   }
@@ -317,6 +350,6 @@ export class UI {
     this.captionEl.textContent = text;
     this.captionEl.classList.remove('hidden');
     clearTimeout(this._ct);
-    this._ct = setTimeout(() => this.captionEl.classList.add('hidden'), Math.min(12000, 2500 + text.length * 180));
+    this._ct = setTimeout(() => this.captionEl.classList.add('hidden'), Math.min(12000, 2500 + text.length * (/[一-鿿]/.test(text) ? 180 : 70)));
   }
 }

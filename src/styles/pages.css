@@ -965,9 +965,10 @@ mark.claim sup {
   font-weight: 700;
   color: var(--tech-d);
 }
-.ev.sel .ev-src::after {
-  content: '  ✓ 已选为证据';
+.ev-src i {
+  font-style: normal;
   color: var(--mint-d);
+  white-space: pre;
 }
 .ev-txt {
   display: block;
@@ -1089,4 +1090,65 @@ mark.claim sup {
 
 .pool:empty {
   display: none;
+}
+
+/* ---------- 英文版排版：英文句子更长，标签与按钮做相应调整 ---------- */
+html[lang='en'] .page {
+  font-size: 12.6px;
+  line-height: 1.5;
+}
+html[lang='en'] .pg h1 {
+  font-size: 25px;
+}
+html[lang='en'] .pg h2 {
+  font-size: 15px;
+}
+html[lang='en'] .callout,
+html[lang='en'] .dialogue p,
+html[lang='en'] .claim-box,
+html[lang='en'] .qa-q,
+html[lang='en'] .fld span {
+  font-size: 13.2px;
+  line-height: 1.45;
+}
+html[lang='en'] .q {
+  font-size: 13.4px !important;
+  line-height: 1.4 !important;
+}
+html[lang='en'] .cc-row {
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+html[lang='en'] .st {
+  font-size: 10.4px;
+  white-space: normal;
+  line-height: 1.2;
+}
+html[lang='en'] .opt {
+  font-size: 12.4px;
+  line-height: 1.42;
+}
+html[lang='en'] .opts.three .opt {
+  padding: 8px 4px;
+  font-size: 12px;
+}
+html[lang='en'] .stats small {
+  font-size: 10px;
+  line-height: 1.2;
+}
+html[lang='en'] .fl,
+html[lang='en'] .slot,
+html[lang='en'] .mchip {
+  font-size: 11px;
+  line-height: 1.32;
+}
+html[lang='en'] .slot {
+  min-height: 78px;
+}
+html[lang='en'] .tbl {
+  font-size: 11.6px;
+}
+html[lang='en'] .btn.cat,
+html[lang='en'] .btn.dog {
+  font-size: 17px;
 }

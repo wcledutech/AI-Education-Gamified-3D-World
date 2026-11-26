@@ -5,6 +5,7 @@ import { BaseScene, tree, coneTree, bush, bench, pedestal, flagPole } from './Ba
 import { COLORS, STAGE, FONT_CN } from '../utils/config.js';
 import { mat, box, rbox, cyl, ball, prism, group, sign, CanvasPanel, roundRect, shadow } from '../utils/three-helpers.js';
 import { makeHuman, makeRobot } from '../characters/CharacterFactory.js';
+import { T } from '../utils/i18n.js';
 
 const glow = (color, k = 0) => new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: k, roughness: 0.6 });
 
@@ -33,7 +34,7 @@ export class SmartCityScene extends BaseScene {
     solar.rotation.z = 0.615;
     solar.rotation.order = 'YXZ';
     home.add(solar);
-    const hs = sign('智慧小屋', { w: 0.9, h: 0.24, bg: COLORS.cream, border: COLORS.coralDark });
+    const hs = sign(['智慧小屋', 'Smart Home'], { w: 0.9, h: 0.24, bg: COLORS.cream, border: COLORS.coralDark });
     hs.position.set(0.1, 1.05, 0.67);
     home.add(hs);
     this.pop(home, -2.55, -2.6, { order: 0 });
@@ -44,7 +45,7 @@ export class SmartCityScene extends BaseScene {
     lab.add(rbox(1.3, 0.62, 0.04, '#BFD8E2', 0, 0.62, 0.6, 0.02));
     lab.add(rbox(0.4, 0.5, 0.05, COLORS.cream, -0.72, 0, 0.6, 0.02));
     [-0.4, 0, 0.4].forEach((x) => lab.add(box(0.02, 0.62, 0.05, COLORS.cream, x, 0.62, 0.61)));
-    const ls = sign('图像识别站', { w: 1.2, h: 0.26, bg: COLORS.cream, border: COLORS.techDark });
+    const ls = sign(['图像识别站', 'Image Recognition'], { w: 1.2, h: 0.26, bg: COLORS.cream, border: COLORS.techDark });
     ls.position.set(0, 1.46, 0.61);
     lab.add(ls);
     const eye = cyl(0.26, 0.26, 0.06, COLORS.cream, 0, 0, 0, 24);
@@ -60,7 +61,7 @@ export class SmartCityScene extends BaseScene {
     for (let r = 0; r < 2; r++)
       for (let c = 0; c < 3; c++) school.add(rbox(0.34, 0.34, 0.04, COLORS.tech, -0.55 + c * 0.55, 0.78 + r * 0.56, 0.6, 0.02));
     school.add(rbox(0.5, 0.56, 0.05, COLORS.greenDark, 0, 0, 0.6, 0.02));
-    const ss = sign('明理中学', { w: 0.9, h: 0.22, bg: COLORS.cream, border: COLORS.greenDark });
+    const ss = sign(['明理中学', 'Mingli School'], { w: 0.9, h: 0.22, bg: COLORS.cream, border: COLORS.greenDark });
     ss.position.set(0, 0.66, 0.635);
     school.add(ss);
     const fp = flagPole(0.8);
@@ -74,7 +75,7 @@ export class SmartCityScene extends BaseScene {
     const reg = (id, root, x, z, opts = {}) => {
       const dev = this.def.devices.find((d) => d.id === id);
       const p = this.pop(root, x, z, { order: 1, ...opts });
-      this.clickable(root, { id, label: dev.name, hint: '点击观察它怎样工作', onClick: () => this.onDevice(id) });
+      this.clickable(root, { id, label: () => this.def.devices.find((d) => d.id === id).name, hint: ['点击观察它怎样工作', 'Click to see how it works'], onClick: () => this.onDevice(id) });
       return p;
     };
 
@@ -202,7 +203,7 @@ export class SmartCityScene extends BaseScene {
     this.sigPanel = new CanvasPanel(0.46, 0.22, { ppu: 300, lit: false });
     this.sigPanel.mesh.position.set(0, 0.98, 0.1);
     sig.add(this.sigPanel.mesh);
-    this.drawSignal(2, '绿灯 20 秒');
+    this.drawSignal(2, 'idle');
     this.setLight(2);
     reg('signal', sig, 2.2, 1.35);
 
@@ -232,7 +233,7 @@ export class SmartCityScene extends BaseScene {
     this.pop(bench(), 2.45, 3.05, { order: 2, yaw: -0.35 });
     // 斑马线行人标志
     const ped = group(cyl(0.025, 0.03, 0.75, COLORS.inkSoft, 0, 0, 0, 8));
-    const ps = sign('行人', { w: 0.34, h: 0.34, bg: COLORS.tech, fg: '#FFFFFF', radius: 0.5 });
+    const ps = sign(['行人', 'WALK'], { w: 0.34, h: 0.34, bg: COLORS.tech, fg: '#FFFFFF', radius: 0.5 });
     ps.position.set(0, 0.86, 0.02);
     ped.add(ps);
     this.pop(ped, 1.35, 1.2, { order: 2 });
@@ -303,19 +304,19 @@ export class SmartCityScene extends BaseScene {
       ctx.fillStyle = COLORS.ink;
       ctx.font = `700 ${H * 0.1}px ${FONT_CN}`;
       ctx.textAlign = 'left';
-      ctx.fillText('输入图像', W * 0.66, H * 0.3);
+      ctx.fillText(T('输入图像', 'Input image'), W * 0.66, H * 0.3, W * 0.32);
       if (p >= 1) {
         ctx.fillStyle = COLORS.techDark;
         roundRect(ctx, W * 0.65, H * 0.42, W * 0.31, H * 0.34, 10);
         ctx.fill();
         ctx.fillStyle = '#fff';
         ctx.font = `700 ${H * 0.095}px ${FONT_CN}`;
-        ctx.fillText('预测:叶片', W * 0.67, H * 0.55);
-        ctx.fillText('可能性 92%', W * 0.67, H * 0.68);
+        ctx.fillText(T('预测:叶片', 'Leaf'), W * 0.67, H * 0.55, W * 0.28);
+        ctx.fillText(T('可能性 92%', '92% likely'), W * 0.67, H * 0.68, W * 0.28);
       } else {
         ctx.fillStyle = COLORS.inkSoft;
         ctx.font = `500 ${H * 0.085}px ${FONT_CN}`;
-        ctx.fillText(p > 0 ? '识别中…' : '等待识别', W * 0.66, H * 0.5);
+        ctx.fillText(p > 0 ? T('识别中…', 'Scanning…') : T('等待识别', 'Waiting'), W * 0.66, H * 0.5, W * 0.32);
       }
     });
   }
@@ -355,7 +356,7 @@ export class SmartCityScene extends BaseScene {
       ctx.fillStyle = COLORS.ink;
       ctx.textAlign = 'center';
       ctx.font = `700 ${H * 0.1}px ${FONT_CN}`;
-      ctx.fillText(['请正对摄像头', '比对特征中…', '已登记·通过'][state], W / 2, H * 0.93);
+      ctx.fillText([T('请正对摄像头', 'Face the camera'), T('比对特征中…', 'Comparing…'), T('已登记·通过', 'Registered · OK')][state], W / 2, H * 0.93, W * 0.94);
     });
   }
   drawSignal(cars, text) {
@@ -366,9 +367,10 @@ export class SmartCityScene extends BaseScene {
       ctx.fillStyle = COLORS.ink;
       ctx.textAlign = 'center';
       ctx.font = `700 ${H * 0.3}px ${FONT_CN}`;
-      ctx.fillText(`识别到 ${cars} 辆车`, W / 2, H * 0.38);
+      ctx.fillText(T(`识别到 ${cars} 辆车`, `${cars} cars detected`), W / 2, H * 0.38, W * 0.94);
       ctx.fillStyle = COLORS.techDark;
-      ctx.fillText(text, W / 2, H * 0.8);
+      const msg = { idle: T('绿灯 20 秒', 'Green: 20 s'), calc: T('计算配时…', 'Adjusting…'), extend: T('延长绿灯 35 秒', 'Green: 35 s') }[text] || text;
+      ctx.fillText(msg, W / 2, H * 0.8, W * 0.94);
     });
   }
   drawSky(night) {
@@ -389,7 +391,7 @@ export class SmartCityScene extends BaseScene {
       ctx.fillStyle = night ? '#fff' : COLORS.ink;
       ctx.font = `700 ${H * 0.28}px ${FONT_CN}`;
       ctx.textAlign = 'left';
-      ctx.fillText(night ? '亮度低→开灯' : '亮度高→关灯', W * 0.38, H * 0.6);
+      ctx.fillText(night ? T('亮度低→开灯', 'Dark → on') : T('亮度高→关灯', 'Bright → off'), W * 0.38, H * 0.6, W * 0.6);
     });
   }
   setLight(i) {
@@ -451,11 +453,11 @@ export class SmartCityScene extends BaseScene {
         break;
       case 'signal':
         tl.to(this.sigCam.rotation, { y: 0.6, duration: 0.6, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 0);
-        [3, 5, 8].forEach((n, i) => tl.add(() => this.drawSignal(n, n > 5 ? '延长绿灯 35 秒' : '计算配时…'), 0.5 + i * 0.6));
+        [3, 5, 8].forEach((n, i) => tl.add(() => this.drawSignal(n, n > 5 ? 'extend' : 'calc'), 0.5 + i * 0.6));
         tl.add(() => this.setLight(1), 0.2);
         tl.add(() => this.setLight(2), 1.9);
         tl.add(() => {
-          this.drawSignal(2, '绿灯 20 秒');
+          this.drawSignal(2, 'idle');
         }, 5);
         break;
       case 'streetlamp':

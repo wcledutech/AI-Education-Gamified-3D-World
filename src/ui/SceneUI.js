@@ -1,6 +1,7 @@
 // 场景界面基类：负责左页（知识探索）与右页（学习实验与反馈）的公共结构，
 // 以及任务步骤的推进。各场景的界面类只需实现自己的任务区。
 import { CONCEPTS, SPREADS } from '../learning/LessonData.js';
+import { T } from '../utils/i18n.js';
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -38,6 +39,9 @@ export class SceneUI {
   task() {
     return '';
   }
+  focusBtn(side) {
+    return `<button class="icon-btn" data-act="focus" data-side="${side}" title="${T('放大 / 还原这一页', 'Zoom this page in / out')}">⤢</button>`;
+  }
 
   // ---------- 左页：知识探索 ----------
   left() {
@@ -45,25 +49,25 @@ export class SceneUI {
     const c = this.concept && CONCEPTS[this.concept];
     const steps = d.steps || [];
     return `
-      <div class="pg-head"><span class="unit">${esc(d.unit)} · ${esc(d.stage)}</span><span class="pg-tools"><button class="icon-btn" data-act="focus" data-side="left" title="放大 / 还原这一页">⤢</button></span></div>
+      <div class="pg-head"><span class="unit">${esc(d.unit)} · ${esc(d.stage)}</span><span class="pg-tools">${this.focusBtn('left')}</span></div>
       <h1>${esc(d.title)}</h1>
       <h2>${esc(d.question)}</h2>
       <p class="intro">${esc(d.intro)}</p>
-      ${d.core ? `<div class="callout"><b>核心问题</b>${esc(d.core)}</div>` : ''}
-      ${d.goals ? `<section><h3>学习目标</h3><ul class="goals">${d.goals.map((g) => `<li>${esc(g)}</li>`).join('')}</ul></section>` : ''}
+      ${d.core ? `<div class="callout"><b>${T('核心问题', 'Key question')}</b>${esc(d.core)}</div>` : ''}
+      ${d.goals ? `<section><h3>${T('学习目标', 'Learning goals')}</h3><ul class="goals">${d.goals.map((g) => `<li>${esc(g)}</li>`).join('')}</ul></section>` : ''}
       ${
         d.concepts?.length
-          ? `<section><h3>重点概念 <small>点击查看说明</small></h3>
+          ? `<section><h3>${T('重点概念', 'Key concepts')} <small>${T('点击查看说明', 'click to open')}</small></h3>
         <div class="chips">${d.concepts.map((id) => `<button class="chip ${this.concept === id ? 'on' : ''}" data-act="concept" data-id="${id}">${esc(CONCEPTS[id].name)}</button>`).join('')}</div>
         ${
           c
             ? `<div class="concept-card" key="${this.concept}">
-          <button class="icon-btn close" data-act="concept-close" title="收起">×</button>
+          <button class="icon-btn close" data-act="concept-close" title="${T('收起', 'Close')}">×</button>
           <h4>${esc(c.name)}</h4>
           <p>${esc(c.explain)}</p>
-          <div class="cc-row"><b>生活示例</b><span>${esc(c.example)}</span></div>
-          ${c.link ? `<div class="cc-row"><b>在本场景中</b><span>${esc(c.link.text)}${c.link.scene === d.key ? ` <button class="link" data-act="locate" data-target="${c.link.target}">在立体场景中找到它</button>` : ''}</span></div>` : ''}
-          <div class="cc-think"><b>想一想</b>${esc(c.think)}</div>
+          <div class="cc-row"><b>${T('生活示例', 'Everyday example')}</b><span>${esc(c.example)}</span></div>
+          ${c.link ? `<div class="cc-row"><b>${T('在本场景中', 'In this scene')}</b><span>${esc(c.link.text)}${c.link.scene === d.key ? ` <button class="link" data-act="locate" data-target="${c.link.target}">${T('在立体场景中找到它', 'Find it in the 3D scene')}</button>` : ''}</span></div>` : ''}
+          <div class="cc-think"><b>${T('想一想', 'Think about it')}</b>${esc(c.think)}</div>
         </div>`
             : ''
         }</section>`
@@ -71,8 +75,8 @@ export class SceneUI {
       }
       ${
         steps.length
-          ? `<section><h3>当前探究任务</h3><div class="task-now"><b>${this.st.step + 1}/${steps.length} · ${esc(steps[this.st.step].name)}</b><span>${esc(this.taskHint())}</span></div>
-        <div class="flowline">提出问题 → 预测 → 操作 → 反馈 → 解释 → 总结</div></section>`
+          ? `<section><h3>${T('当前探究任务', 'Current task')}</h3><div class="task-now"><b>${this.st.step + 1}/${steps.length} · ${esc(steps[this.st.step].name)}</b><span>${esc(this.taskHint())}</span></div>
+        <div class="flowline">${T('提出问题 → 预测 → 操作 → 反馈 → 解释 → 总结', 'Ask → Predict → Do → Feedback → Explain → Sum up')}</div></section>`
           : this.leftExtra()
       }`;
   }
@@ -80,16 +84,25 @@ export class SceneUI {
     return '';
   }
 
+  /** 人物对话卡（台词随当前语言显示） */
+  dialogueHtml(showHint = true) {
+    const dlg = this.app.dialogue;
+    const sp = this.app.speech;
+    const ch = dlg && dlg.scene === this.def.key && this.scene.characters[dlg.charId];
+    if (!ch) return showHint ? `<div class="dialogue hint"><p>${T('点击立体场景中的人物，可以听听他们怎么说。', 'Click a character in the 3D scene to hear what they say.')}</p></div>` : '';
+    const L = this.def.lines[dlg.charId] || {};
+    return `<div class="dialogue" style="--who:${ch.color}"><div class="who"><b>${esc(ch.name)}</b><span>${esc(ch.role)}</span></div><p>${esc(L[dlg.step] || L.default)}</p>
+        <div class="dlg-tools"><button class="btn sm ghost" data-act="speak">${sp.speaking ? T('♪ 朗读中', '♪ Playing') : T('▶ 朗读', '▶ Listen')}</button><button class="btn sm ghost" data-act="stop">${T('■ 停止', '■ Stop')}</button>${sp.supported ? '' : `<span class="muted">${T('当前浏览器不支持语音', 'Speech is not supported in this browser')}</span>`}</div></div>`;
+  }
+
   // ---------- 右页：学习实验与反馈 ----------
   right() {
     const d = this.def;
     const steps = d.steps || [];
     const max = this.maxStep();
-    const dlg = this.app.dialogue;
-    const sp = this.app.speech;
     const logs = this.app.state.data.log.filter((l) => l.scene === d.key).slice(-2).reverse();
     return `
-      <div class="pg-head"><span class="unit">学习实验与反馈</span><span class="pg-tools">${steps.length ? `<span class="prog">任务 ${this.st.step + 1}/${steps.length}</span>` : ''}<button class="icon-btn" data-act="focus" data-side="right" title="放大 / 还原这一页">⤢</button></span></div>
+      <div class="pg-head"><span class="unit">${T('学习实验与反馈', 'Experiment & feedback')}</span><span class="pg-tools">${steps.length ? `<span class="prog">${T('任务', 'Task')} ${this.st.step + 1}/${steps.length}</span>` : ''}${this.focusBtn('right')}</span></div>
       ${
         steps.length
           ? `<div class="stepper">${steps
@@ -97,28 +110,23 @@ export class SceneUI {
               .join('')}</div>`
           : ''
       }
-      ${
-        dlg && dlg.scene === d.key
-          ? `<div class="dialogue" style="--who:${dlg.color}"><div class="who"><b>${esc(dlg.name)}</b><span>${esc(dlg.role)}</span></div><p>${esc(dlg.text)}</p>
-        <div class="dlg-tools"><button class="btn sm ghost" data-act="speak">${sp.speaking ? '♪ 朗读中' : '▶ 朗读'}</button><button class="btn sm ghost" data-act="stop">■ 停止</button>${sp.supported ? '' : '<span class="muted">当前浏览器不支持语音</span>'}</div></div>`
-          : `<div class="dialogue hint"><p>点击立体场景中的人物，可以听听他们怎么说。</p></div>`
-      }
+      ${this.dialogueHtml()}
       <div class="task">${this.task()}</div>
-      <section class="mini-log"><h3>我的探索记录 <button class="link" data-act="records">查看全部</button></h3>
-        ${logs.length ? logs.map((l) => `<div class="log-item">${esc(l.text)}</div>`).join('') : '<div class="log-item muted">完成任务后，记录会出现在这里。</div>'}
+      <section class="mini-log"><h3>${T('我的探索记录', 'My exploration log')} <button class="link" data-act="records">${T('查看全部', 'View all')}</button></h3>
+        ${logs.length ? logs.map((l) => `<div class="log-item">${esc(l.text)}</div>`).join('') : `<div class="log-item muted">${T('完成任务后，记录会出现在这里。', 'Entries will appear here as you complete tasks.')}</div>`}
       </section>`;
   }
 
   /** 下一步按钮 */
-  nextBtn(enabled, text = '下一步', tip = '') {
+  nextBtn(enabled, text = T('下一步', 'Next'), tip = '') {
     return `<div class="next-row">${!enabled && tip ? `<span class="muted">${esc(tip)}</span>` : ''}<button class="btn primary" data-act="next" ${enabled ? '' : 'disabled'}>${esc(text)} →</button></div>`;
   }
   /** 本页完成后的翻页按钮 */
   finishBlock(doneText) {
     const i = SPREADS.indexOf(this.def);
     const next = SPREADS[i + 1];
-    if (!this.st.done) return `<div class="next-row"><button class="btn primary" data-act="finish">完成本页学习 ✓</button></div>`;
-    return `<div class="fb ok"><b>本页学习已完成</b>${esc(doneText)}</div>${next ? `<div class="next-row"><button class="btn primary" data-act="next-page">翻到下一页：${esc(next.title)} →</button></div>` : ''}`;
+    if (!this.st.done) return `<div class="next-row"><button class="btn primary" data-act="finish">${T('完成本页学习 ✓', 'Finish this page ✓')}</button></div>`;
+    return `<div class="fb ok"><b>${T('本页学习已完成', 'This page is complete')}</b>${esc(doneText)}</div>${next ? `<div class="next-row"><button class="btn primary" data-act="next-page">${T('翻到下一页：', 'Next page: ')}${esc(next.title)} →</button></div>` : ''}`;
   }
 
   goStep(i) {
@@ -150,11 +158,11 @@ export class SceneUI {
         return this.goStep(this.st.step + 1);
       case 'finish':
         this.st.done = true;
-        this.log('done', `完成《${this.def.title}》的全部学习任务。`);
+        this.log('done', T(`完成《${this.def.title}》的全部学习任务。`, `Completed all tasks in “${this.def.title}”.`));
         this.save();
         app.ui.render();
         app.ui.updateBar();
-        app.toast('本页学习完成，下一页已解锁');
+        app.toast(T('本页学习完成，下一页已解锁', 'Page complete. The next page is unlocked.'));
         return;
       case 'next-page':
         return app.turn(SPREADS.indexOf(this.def) + 1);
@@ -185,9 +193,13 @@ export class SceneUI {
     const L = this.def.lines[charId] || {};
     return L[this.stepId] || L.default;
   }
+  /** 这句台词实际使用的步骤键（没有专属台词时为 default） */
+  lineStep(charId) {
+    const L = this.def.lines[charId] || {};
+    return L[this.stepId] ? this.stepId : 'default';
+  }
   /** 这句台词对应的预录音频键：场景.人物.步骤 */
   lineKey(charId) {
-    const L = this.def.lines[charId] || {};
-    return [this.def.key, charId, L[this.stepId] ? this.stepId : 'default'].join('.');
+    return [this.def.key, charId, this.lineStep(charId)].join('.');
   }
 }

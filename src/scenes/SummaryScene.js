@@ -5,13 +5,14 @@ import { BaseScene, pedestal, flagPole, tree } from './BaseScene.js';
 import { COLORS, STAGE, FONT_CN, FONT_KAI } from '../utils/config.js';
 import { box, rbox, cyl, ball, prism, group, sign, mat, shadow } from '../utils/three-helpers.js';
 import { makeHuman, makeRobot } from '../characters/CharacterFactory.js';
+import { T } from '../utils/i18n.js';
 
 export class SummaryScene extends BaseScene {
   build() {
     // 拱门横幅
     const arch = group(box(0.14, 2.3, 0.14, COLORS.brown, -2.6, 0, 0), box(0.14, 2.3, 0.14, COLORS.brown, 2.6, 0, 0));
     arch.add(rbox(5.6, 0.7, 0.06, COLORS.cream, 0, 1.75, 0.02, 0.04));
-    const title = sign('我的 AI 探索报告', { w: 5.2, h: 0.56, bg: COLORS.cream, border: COLORS.coralDark, font: FONT_KAI, size: 0.62 });
+    const title = sign(['我的 AI 探索报告', 'My AI Exploration Report'], { w: 5.2, h: 0.56, bg: COLORS.cream, border: COLORS.coralDark, font: FONT_KAI, size: 0.62 });
     title.position.set(0, 2.1, 0.055);
     arch.add(title);
     [-2.2, -1.1, 0, 1.1, 2.2].forEach((x, i) => {
@@ -26,11 +27,11 @@ export class SummaryScene extends BaseScene {
 
     // 三个场景的微缩模型 + 完成旗
     const mini = [
-      { key: 'city', label: '认识 AI', x: -2.3, build: () => group(rbox(0.5, 0.36, 0.4, '#F4E9D6', 0, 0, 0, 0.02), prism(0.6, 0.24, 0.46, COLORS.coral, 0, 0.36, 0)) },
-      { key: 'lab', label: '理解 AI', x: 0, build: () => group(rbox(0.5, 0.5, 0.3, '#6E828C', 0, 0, 0, 0.03), rbox(0.36, 0.22, 0.02, '#BFE3D0', 0, 0.2, 0.16, 0.02)) },
+      { key: 'city', label: ['认识 AI', 'Meet AI'], x: -2.3, build: () => group(rbox(0.5, 0.36, 0.4, '#F4E9D6', 0, 0, 0, 0.02), prism(0.6, 0.24, 0.46, COLORS.coral, 0, 0.36, 0)) },
+      { key: 'lab', label: ['理解 AI', 'Understand AI'], x: 0, build: () => group(rbox(0.5, 0.5, 0.3, '#6E828C', 0, 0, 0, 0.03), rbox(0.36, 0.22, 0.02, '#BFE3D0', 0, 0.2, 0.16, 0.02)) },
       {
         key: 'verify',
-        label: '判断 AI',
+        label: ['判断 AI', 'Evaluate AI'],
         x: 2.3,
         build: () => {
           const g = group(rbox(0.6, 0.36, 0.06, COLORS.cream, 0, 0.1, 0, 0.03), box(0.06, 0.12, 0.06, COLORS.inkSoft, 0, 0, 0));
@@ -139,6 +140,6 @@ export class SummaryScene extends BaseScene {
     ctx.fillStyle = 'rgba(52,67,74,0.6)';
     ctx.font = `700 24px ${FONT_KAI}`;
     ctx.textAlign = 'center';
-    ctx.fillText('认识 AI  →  理解 AI  →  判断 AI', X(0), Z(3.3));
+    ctx.fillText(T('认识 AI  →  理解 AI  →  判断 AI', 'Meet AI  →  Understand AI  →  Evaluate AI'), X(0), Z(3.3));
   }
 }

@@ -2,6 +2,8 @@
 
 一本可以真实打开、连续翻页、立体展开的 **3D 互动立体纸艺人工智能通识教材**（面向初中七年级，40—45 分钟）。
 
+> **English** — An interactive 3D pop-up textbook for AI literacy (Grade 7, 40–45 minutes). A hardcover book opens into three pop-up scenes: a smart city (where is AI?), a training lab where students label data and train a real image classifier in the browser, and a fact-check center (is everything AI says true?). The whole book is available in **Chinese and English**: use the language button in the control bar, or open the page with `?lang=en`.
+
 学习路径：**认识 AI（AI 智慧城市）→ 理解 AI（AI 训练实验室）→ 判断 AI（AI 判断中心）→ 我的 AI 探索报告**
 
 ---
@@ -38,6 +40,7 @@ npm run preview        # 本地预览 dist/
 - **阅读**：左页是知识探索，右页是学习实验与反馈。页面右上角的 ⤢ 可把这一页放大到眼前。
 - **互动**：点击立体场景里的人物（对话与朗读）和设备（查看原理）；点击左页的重点概念展开说明卡。
 - **翻页**：完成当前页的全部任务后，下一页自动解锁；也可以用键盘 ← →。
+- **语言**：控制栏最右边的“English / 中文”按钮可随时切换整本书的语言（教学内容、界面、3D 场景里的标牌和屏幕、书页印刷、封面、人物语音一起切换）；合书时右上角也有同样的按钮。网址后加 `?lang=en` 可直接以英文打开，例如 <https://wcledutech.github.io/AI-Education-Gamified-3D-World/?lang=en>。第一次打开时，浏览器语言不是中文的访客默认看到英文。
 - **教师模式**：“学习帮助”里可以勾选“教师模式”，解锁全部页面，方便课堂演示。
 - **记录**：“探索记录”里可以查看并导出学习记录（JSON / 文本）。进度保存在本机浏览器的 LocalStorage。
 
@@ -88,12 +91,14 @@ npm run preview        # 本地预览 dist/
 
 ### 关于语音
 
-- 人物台词是用开源模型 **MeloTTS** 预先合成的女声，打包在课本里，任何浏览器、断网时都能播放。
+- 人物台词已预先合成为音频并打包在课本里，任何浏览器、断网时都能播放。中文与英文各 37 段：
+  - 中文：`src/assets/audio/*.mp3`，开源模型 **MeloTTS**，一位女声，学生和机器人播放时略微升调。
+  - 英文：`src/assets/audio/en/*.mp3`，开源模型 **Kokoro**，老师、学生、AI 角色分别使用不同的配音。
 - 重新生成（例如改了台词）：
-  1. 新建一个工具文件夹，在里面执行 `npm install sherpa-onnx-node @breezystack/lamejs`；
-  2. 下载并解压模型 `vits-melo-tts-zh_en`（约 167 MB，地址写在 `tools/make-voice.mjs` 开头）；
-  3. 在本目录执行 `node tools/make-voice.mjs <工具文件夹> <模型文件夹>`，然后重新构建。
-- 没有预录音频的文字会使用浏览器语音。用 **Edge** 打开时会自动选用更自然的在线语音（如 Xiaoxiao）。
+  1. 新建一个工具文件夹，在里面执行 `npm install sherpa-onnx-node@1.13.8 @breezystack/lamejs`（英文模型需要 1.x 版本，2.x 不再支持它所需的音素数据）；
+  2. 下载并解压模型：中文 `vits-melo-tts-zh_en`（约 167 MB），英文 `kokoro-en-v0_19`（约 320 MB），地址写在 `tools/make-voice.mjs` 开头；
+  3. 在本目录执行 `node tools/make-voice.mjs <工具文件夹> <模型文件夹> zh` 或 `... en`，然后重新构建。
+- 没有预录音频的文字会使用浏览器语音。
 
 ---
 
@@ -110,11 +115,11 @@ hello-ai/
 │   ├── book/              BookModel.js（精装书） PageModel.js（弯曲翻页） PopUp.js（折叠机构 / 纸台 / 立页） SpreadTextures.js（书页印刷）
 │   ├── scenes/            BaseScene.js  SmartCityScene.js  AITrainingScene.js  AIVerificationScene.js  SummaryScene.js
 │   ├── characters/        CharacterFactory.js（学生 / 教师 / 机器人）
-│   ├── learning/          LessonData.js（全部教学内容） LearningProgress.js（进度保存） Assessment.js（评价与导出）
+│   ├── learning/          lesson.zh.js / lesson.en.js（中英文教学内容，结构一致） LessonData.js（按当前语言提供内容） LearningProgress.js（进度保存） Assessment.js（评价与导出）
 │   ├── ml/                SampleArt.js  DatasetManager.js  ModelTrainer.js  ModelEvaluator.js
 │   ├── ui/                UI.js（控制栏 / 弹层） SceneUI.js（任务步骤基类） CityUI.js  LabUI.js  VerifyUI.js  SummaryUI.js
-│   ├── assets/audio/      37 段预先合成的人物台词（MP3）与 manifest.json
-│   └── utils/             config.js  three-helpers.js  Speech.js  frame.js
+│   ├── assets/audio/      预先合成的人物台词：中文 37 段，en/ 下英文 37 段
+│   └── utils/             config.js  three-helpers.js  i18n.js（语言切换）  Speech.js  frame.js
 ├── tools/                 make-voice.mjs（重新合成台词音频） deploy.mjs（发布到 GitHub Pages）
 └── docs/测试记录.md
 ```
@@ -149,8 +154,10 @@ hello-ai/
 5. 人物台词使用同一位合成女声，学生和机器人通过略微升调来区分，不是不同的配音演员。修改台词文字后需要重新运行 `tools/make-voice.mjs` 生成音频，否则该句会退回浏览器自带的语音。
 6. 案例 C 的证据卡为教学用模拟资料（界面中已标明）。
 
+7. 双语：界面文字用 `T('中文', 'English')` 的方式写在代码里，教学内容在 `lesson.zh.js` / `lesson.en.js` 两个文件中，修改内容时两边都要改。“探索记录”按写入时的语言保存，中途切换语言后，之前的记录仍是原来的语言。英文版人物沿用拼音名（Xiaohang、Xiaozhi、Xiaohe、Ms. Lin、Xiaoyu、Ms. Zhou、Xiaowen）。
+
 ## 八、资源与许可
 
 - 代码依赖：three（MIT）、gsap（标准免费许可）、@tensorflow/tfjs（Apache-2.0）、vite（MIT）。
 - 所有贴图、样本图片、模型均由本项目代码生成，不包含第三方素材。
-- 人物台词音频由开源语音合成模型 MeloTTS（中英混合，MIT 许可）经 sherpa-onnx（Apache-2.0）在本机离线合成，属于 AI 合成语音。
+- 人物台词音频由开源语音合成模型经 sherpa-onnx（Apache-2.0）在本机离线合成，属于 AI 合成语音：中文用 MeloTTS（MIT 许可），英文用 Kokoro（Apache-2.0）。

@@ -15,13 +15,27 @@ function arm(color, handColor, len = 0.3) {
 
 class Character {
   constructor(info) {
-    Object.assign(this, info);
+    this.id = info.id;
+    this._info = info;
+    this.def = null; // 所在场景的定义（由 BaseScene.addCharacter 设置）
     this.group = new THREE.Group();
     this.rig = new THREE.Group(); // 身体整体（用于呼吸起伏）
     this.group.add(this.rig);
     this.phase = Math.random() * 6;
     this.baseYaw = 0;
     this.acting = false;
+  }
+  get info() {
+    return this.def?.characters?.[this.id] || this._info;
+  }
+  get name() {
+    return this.info.name;
+  }
+  get role() {
+    return this.info.role;
+  }
+  get color() {
+    return this.info.color;
   }
   setYaw(y) {
     this.baseYaw = y;

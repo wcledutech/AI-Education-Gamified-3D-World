@@ -203,6 +203,10 @@ button:disabled {
   background: var(--line);
   margin: 0 4px;
 }
+#bar button[data-bar='lang'] span {
+  display: inline !important;
+  font-weight: 700;
+}
 #bar-page {
   white-space: nowrap;
   padding: 0 8px;
@@ -378,4 +382,41 @@ button:disabled {
   padding: 12px 14px;
   background: var(--paper-3);
   border-radius: 10px;
+}
+
+/* ---------- 语言 ---------- */
+html[lang='en'] {
+  --f-cn: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --f-kai: Cambria, 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+}
+/* 合书时右上角的语言切换（开书后改用控制栏里的按钮） */
+#lang-chip {
+  position: absolute;
+  right: 18px;
+  top: 16px;
+  z-index: 12;
+  padding: 7px 16px;
+  border: 1px solid rgba(120, 100, 60, 0.3);
+  border-radius: 20px;
+  background: rgba(251, 248, 240, 0.94);
+  box-shadow: 0 4px 12px rgba(80, 60, 30, 0.16);
+  font-size: 13px;
+  font-weight: 700;
+}
+#lang-chip:hover {
+  background: #fff;
+}
+html[lang='en'] #bar button {
+  padding: 7px 8px;
+}
+@media (max-width: 1160px) {
+  html[lang='en'] #bar button span {
+    display: none;
+  }
+  html[lang='en'] #bar button {
+    padding: 8px 9px;
+  }
+}
+html[lang='en'] #start-hint b {
+  font-size: 16px;
 }

@@ -6,12 +6,14 @@ import { CameraManager } from './CameraManager.js';
 import { Interaction } from './Interaction.js';
 import { BookController } from './BookController.js';
 import { buildSpreadTextures } from '../book/SpreadTextures.js';
-import { SPREADS } from '../learning/LessonData.js';
+import { SPREADS, COURSE } from '../learning/LessonData.js';
 import { LearningProgress } from '../learning/LearningProgress.js';
 import { DatasetManager } from '../ml/DatasetManager.js';
 import { loadTF } from '../ml/ModelTrainer.js';
 import { Speech } from '../utils/Speech.js';
 import { nextFrame } from '../utils/frame.js';
+import { T, getLang, setLang } from '../utils/i18n.js';
+import { redrawAllPanels } from '../utils/three-helpers.js';
 import { UI } from '../ui/UI.js';
 import { SmartCityScene } from '../scenes/SmartCityScene.js';
 import { AITrainingScene } from '../scenes/AITrainingScene.js';
@@ -66,25 +68,26 @@ export class App {
   async start() {
     const ui = this.ui;
     try {
-      ui.progress(0.05, '准备三维渲染器…');
+      document.title = COURSE.title;
+      ui.progress(0.05, T('准备三维渲染器…', 'Preparing the 3D renderer…'));
       await frame();
       const probe = document.createElement('canvas');
-      if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) throw new Error('当前浏览器或设备不支持 WebGL，无法显示三维书本。');
+      if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) throw new Error(T('当前浏览器或设备不支持 WebGL，无法显示三维书本。', 'This browser or device does not support WebGL, so the 3D book cannot be shown.'));
       this.renderer = new Renderer(this.viewport);
       this.cam = new CameraManager(this.renderer.webgl.domElement);
       this.interaction = new Interaction(this.renderer.webgl.domElement, this.cam.camera, ui.tooltip);
 
-      ui.progress(0.15, '绘制猫和狗的样本图片…');
+      ui.progress(0.15, T('绘制猫和狗的样本图片…', 'Drawing the cat and dog pictures…'));
       await frame();
       this.dataset = new DatasetManager();
 
-      ui.progress(0.28, '装订精装书…');
+      ui.progress(0.28, T('装订精装书…', 'Binding the book…'));
       await frame();
       this.book = new BookController(this);
 
       for (let i = 0; i < SPREADS.length; i++) {
         const def = SPREADS[i];
-        ui.progress(0.36 + i * 0.12, `折叠立体场景：${def.title}…`);
+        ui.progress(0.36 + i * 0.12, T(`折叠立体场景：${def.title}…`, `Folding the pop-up scene: ${def.title}…`));
         await frame();
         const [SceneClass, UIClass] = REGISTRY[def.key];
         const scene = new SceneClass(this, def);
@@ -93,26 +96,26 @@ export class App {
         this.scenes.push(scene);
       }
 
-      ui.progress(0.86, '印刷书页…');
+      ui.progress(0.86, T('印刷书页…', 'Printing the pages…'));
       await frame();
-      const spreads = buildSpreadTextures(SPREADS.map((def, i) => ({ unit: def.unit, title: def.title, question: def.question, drawGround: (ctx, w, h, P) => this.scenes[i].drawGround(ctx, w, h, P) })));
-      this.book.init(spreads, this.scenes);
+      this.spreads = buildSpreadTextures(SPREADS.map((def, i) => ({ def, drawGround: (ctx, w, h, P) => this.scenes[i].drawGround(ctx, w, h, P) })));
+      this.book.init(this.spreads, this.scenes);
 
-      ui.progress(0.94, '预热画面…');
+      ui.progress(0.94, T('预热画面…', 'Warming up…'));
       await frame();
       this.resize();
       this.book.warmUp();
 
       this.resize();
       window.addEventListener('resize', () => this.resize());
-      this.interaction.setTargets([{ root: this.book.model.clickTarget, label: 'Hello, AI！', hint: '点击封面打开', active: true, onClick: () => this.openBook() }]);
+      this.interaction.setTargets([{ root: this.book.model.clickTarget, label: ['Hello, AI！', 'Hello, AI!'], hint: ['点击封面打开', 'Click the cover to open'], active: true, onClick: () => this.openBook() }]);
       this.book.model.clickTarget.userData.interactive = this.interaction.targets[0];
       this.interaction.enabled = true;
 
       this.bus.on('book:turning', () => ui.updateBar());
       this.bus.on('spread:entered', () => ui.updateBar());
 
-      ui.progress(1, '完成');
+      ui.progress(1, T('完成', 'Done'));
       await frame();
       // 由 GSAP 的时钟统一驱动“动画更新 → 渲染”，保证同一帧内顺序一致；
       // 偶发的长帧按 33ms 计算，动画不会跳变
@@ -132,6 +135,7 @@ export class App {
     this.interaction.enabled = false;
     this.interaction.setTargets([]);
     this.ui.hint.classList.add('hidden');
+    this.ui.langChip.classList.add('hidden');
     await this.book.open();
     this.ui.bar.classList.remove('hidden');
     this.ui.updateBar();
@@ -142,7 +146,7 @@ export class App {
   /** 翻到第 i 个跨页（检查是否已解锁） */
   async turn(i) {
     if (i < 0 || i >= this.scenes.length || this.book.busy) return;
-    if (!this.state.unlocked(i)) return this.toast('完成前面的学习任务后才能翻到这一页');
+    if (!this.state.unlocked(i)) return this.toast(T('完成前面的学习任务后才能翻到这一页', 'Finish the earlier tasks before turning to this page.'));
     this.cam.autoRotate = false;
     this.dialogue = null;
     const p = this.book.turnTo(i);
@@ -156,14 +160,27 @@ export class App {
     const ch = scene.characters[charId];
     const text = scene.ui.lineFor(charId);
     if (!ch || !text) return;
-    this.dialogue = { scene: scene.key, name: ch.name, role: ch.role, color: ch.color, text };
+    // 只记录“谁在哪一步说话”，文字在显示时按当前语言取
+    this.dialogue = { scene: scene.key, charId, step: scene.ui.lineStep(charId) };
     this.ui.render('right');
-    this.ui.caption(`${ch.name}：${text}`);
+    this.ui.caption(`${ch.name}${T('：', ': ')}${text}`);
     this.speech.speak(text, { key: scene.ui.lineKey(charId), kind: VOICE_KIND[charId] || 'teacher' });
   }
 
   toast(msg) {
     this.ui.toast(msg);
+  }
+
+  /** 中文 ⇄ English：教学内容、界面文字、三维场景里的标牌与屏幕、书页印刷、封面一起切换 */
+  switchLang() {
+    if (this.book?.busy) return this.toast(T('翻页动画结束后再切换语言', 'Please switch language after the page has finished turning.'));
+    this.speech.stop();
+    setLang(getLang() === 'en' ? 'zh' : 'en');
+    redrawAllPanels();
+    this.spreads?.forEach((s) => s.repaint());
+    this.book?.model.redrawCover();
+    this.ui.applyLang();
+    this.toast(T('已切换为中文', 'Switched to English'));
   }
 
   /** 在默认视角与某个特写视角之间切换 */

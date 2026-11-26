@@ -7,6 +7,7 @@ import { PopUp } from '../book/PopUp.js';
 import { COLORS, STAGE, FONT_CN, FONT_KAI } from '../utils/config.js';
 import { mat, box, rbox, cyl, ball, group, sign, CanvasPanel, canvasTex, roundRect, shadow } from '../utils/three-helpers.js';
 import { makeHuman } from '../characters/CharacterFactory.js';
+import { T } from '../utils/i18n.js';
 
 const STAND = { x: -1.85, y: 0.5, z: -1.5, lean: 0.3 };
 const TRAY = { cat: [-2.72, 0.56, 0.5], dog: [-0.98, 0.56, 0.5] };
@@ -28,7 +29,7 @@ export class AITrainingScene extends BaseScene {
 
   station(root, x, z, id, label, opts = {}) {
     const p = this.pop(root, x, z, { order: 1, ...opts });
-    this.clickable(root, { id, label, hint: '点击了解它的作用', onClick: () => this.ui.onStation(id) });
+    this.clickable(root, { id, label, hint: ['点击了解它的作用', 'Click to learn what it does'], onClick: () => this.ui.onStation(id) });
     return p;
   }
 
@@ -43,7 +44,7 @@ export class AITrainingScene extends BaseScene {
       ctx.strokeStyle = 'rgba(52,67,74,0.25)';
       ctx.lineWidth = 3;
       ctx.stroke();
-      const steps = ['数据', '标签', '训练', '模型', '预测'];
+      const steps = [T('数据', 'Data'), T('标签', 'Label'), T('训练', 'Train'), T('模型', 'Model'), T('预测', 'Predict')];
       const cols = [COLORS.tech, COLORS.mint, COLORS.coral, COLORS.mustard, COLORS.green];
       steps.forEach((s, i) => {
         const x = W * (0.1 + i * 0.2);
@@ -55,7 +56,7 @@ export class AITrainingScene extends BaseScene {
         ctx.font = `700 ${H * 0.17}px ${FONT_CN}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(s, x, H * 0.56);
+        ctx.fillText(s, x, H * 0.56, H * 0.37);
         if (i < 4) {
           ctx.strokeStyle = COLORS.inkSoft;
           ctx.lineWidth = 4;
@@ -67,7 +68,7 @@ export class AITrainingScene extends BaseScene {
       });
       ctx.fillStyle = COLORS.inkSoft;
       ctx.font = `600 ${H * 0.12}px ${FONT_KAI}`;
-      ctx.fillText('机器学习：让计算机从数据中找到规律', W / 2, H * 0.14);
+      ctx.fillText(T('机器学习：让计算机从数据中找到规律', 'Machine learning: computers find patterns in data'), W / 2, H * 0.14, W * 0.94);
     });
     poster.mesh.position.set(1.9, 1.75, 0.05);
     wall.add(poster.mesh);
@@ -92,10 +93,10 @@ export class AITrainingScene extends BaseScene {
       leg.rotation.x = 0.12;
       stand.add(leg);
     });
-    const hs = sign('训练样本 · 20 张', { w: 1.5, h: 0.24, bg: COLORS.cream, border: COLORS.techDark });
+    const hs = sign(['训练样本 · 20 张', 'Training samples · 20'], { w: 1.5, h: 0.24, bg: COLORS.cream, border: COLORS.techDark });
     hs.position.set(0, 0.26, 0.055);
     stand.add(hs);
-    this.station(stand, STAND.x, STAND.z, 'stand', '数据样本展示台');
+    this.station(stand, STAND.x, STAND.z, 'stand', ['数据样本展示台', 'Sample display stand']);
 
     // --- 图像标注工作台 + 两个收纳盒 ---
     const table = group(rbox(3.4, 0.5, 1.0, '#EADFCB', 0, 0, 0, 0.04), rbox(3.5, 0.06, 1.08, COLORS.sand, 0, 0.5, 0, 0.02));
@@ -109,13 +110,13 @@ export class AITrainingScene extends BaseScene {
       t.add(s);
       return t;
     };
-    table.add(tray(-0.87, 'cat', '猫'), tray(0.87, 'dog', '狗'));
+    table.add(tray(-0.87, 'cat', ['猫', 'Cat']), tray(0.87, 'dog', ['狗', 'Dog']));
     // 标注位小画架
     table.add(rbox(0.3, 0.06, 0.22, COLORS.ink, 0, 0.56, 0.2, 0.02));
     const back = rbox(0.1, 0.5, 0.03, COLORS.inkSoft, 0, 0.6, 0.1, 0.01);
     back.rotation.x = -0.25;
     table.add(back);
-    this.station(table, -1.85, 0.5, 'label', '图像标注工作台');
+    this.station(table, -1.85, 0.5, 'label', ['图像标注工作台', 'Labeling bench']);
 
     // --- AI 训练主机 ---
     const host = group(rbox(1.3, 2.0, 0.8, '#6E828C', 0, 0, 0, 0.05));
@@ -130,10 +131,10 @@ export class AITrainingScene extends BaseScene {
       return m;
     });
     for (let i = 0; i < 4; i++) host.add(rbox(1.0, 0.05, 0.03, '#566A74', 0, 0.2 + i * 0.14, 0.4, 0.01));
-    const hsg = sign('AI 训练主机', { w: 0.9, h: 0.2, bg: COLORS.cream, border: COLORS.ink });
+    const hsg = sign(['AI 训练主机', 'AI Trainer'], { w: 0.9, h: 0.2, bg: COLORS.cream, border: COLORS.ink });
     hsg.position.set(0, 2.14, 0.3);
     host.add(hsg, box(0.04, 0.1, 0.04, COLORS.ink, 0, 2.0, 0.3));
-    this.station(host, 1.3, -2.55, 'host', 'AI 训练主机');
+    this.station(host, 1.3, -2.55, 'host', ['AI 训练主机', 'AI training computer']);
     this.drawHost({ state: 'idle' });
 
     // --- 模型（纸艺“神经网络”）---
@@ -163,10 +164,10 @@ export class AITrainingScene extends BaseScene {
         })
       );
     model.add(this.net);
-    const ms = sign('模型', { w: 0.5, h: 0.2, bg: COLORS.cream, border: COLORS.coralDark });
+    const ms = sign(['模型', 'Model'], { w: 0.5, h: 0.2, bg: COLORS.cream, border: COLORS.coralDark });
     ms.position.set(0, 0.26, 0.36);
     model.add(ms);
-    this.station(model, 3.0, -2.0, 'model', '模型训练设备');
+    this.station(model, 3.0, -2.0, 'model', ['模型训练设备', 'The model']);
 
     // --- 测试平台 + 预测结果显示屏 ---
     const test = group(rbox(1.1, 0.5, 0.85, '#DCE9DF', 0, 0, 0, 0.04), rbox(1.2, 0.06, 0.95, COLORS.mintDark, 0, 0.5, 0, 0.02));
@@ -175,7 +176,7 @@ export class AITrainingScene extends BaseScene {
     this.scanLight = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.02, 0.05), new THREE.MeshStandardMaterial({ color: COLORS.mint, emissive: COLORS.mint, emissiveIntensity: 0.1 }));
     this.scanLight.position.set(0, 1.49, -0.2);
     test.add(this.scanLight);
-    const ts = sign('测试平台', { w: 0.7, h: 0.2, bg: COLORS.cream, border: COLORS.mintDark });
+    const ts = sign(['测试平台', 'Test platform'], { w: 0.7, h: 0.2, bg: COLORS.cream, border: COLORS.mintDark });
     ts.position.set(0, 0.26, 0.43);
     test.add(ts);
     test.add(box(0.06, 1.0, 0.06, COLORS.inkSoft, 1.22, 0, -0.3));
@@ -185,7 +186,7 @@ export class AITrainingScene extends BaseScene {
     this.resultScreen = new CanvasPanel(1.28, 0.8, { ppu: 240, lit: false });
     this.resultScreen.mesh.position.set(0, 0, 0.035);
     frame.add(this.resultScreen.mesh);
-    this.station(test, 1.9, 0.5, 'test', '测试平台');
+    this.station(test, 1.9, 0.5, 'test', ['测试平台', 'Test platform']);
     this.drawResult(null);
 
     // --- 测试样本架 ---
@@ -194,11 +195,11 @@ export class AITrainingScene extends BaseScene {
     rb.position.set(0, RACK.y + 0.47 * Math.cos(RACK.lean), -0.47 * Math.sin(RACK.lean) - 0.03);
     rb.rotation.x = -RACK.lean;
     rack.add(rb, box(2.2, 0.12, 0.1, COLORS.mintDark, 0, 0, 0.03));
-    const rs = sign('测试样本 · 10 张（不参与训练）', { w: 1.9, h: 0.16, bg: COLORS.cream, fg: COLORS.ink });
+    const rs = sign(['测试样本 · 10 张（不参与训练）', 'Test samples · 10 (never used in training)'], { w: 1.9, h: 0.16, bg: COLORS.cream, fg: COLORS.ink });
     rs.rotation.x = -Math.PI / 2;
     rs.position.set(0, 0.012, 0.22);
     rack.add(rs);
-    this.station(rack, RACK.x, RACK.z, 'rack', '测试样本架', { dir: 'front' });
+    this.station(rack, RACK.x, RACK.z, 'rack', ['测试样本架', 'Test sample rack'], { dir: 'front' });
   }
 
   // ---------- 样本卡片 ----------
@@ -219,7 +220,7 @@ export class AITrainingScene extends BaseScene {
       const card = { id: s.id, mesh: m, tag, front, sample: s, where: 'home' };
       this.cards[s.id] = card;
       this.cardsPop.add(m);
-      this.clickable(m, { id: s.id, label: s.set === 'train' ? `训练样本 ${s.id}` : `测试样本 ${s.id}`, hint: s.set === 'train' ? '点击选择并标注' : '点击送去测试', onClick: () => this.ui.onSample(s.id) });
+      this.clickable(m, { id: s.id, label: () => (s.set === 'train' ? T(`训练样本 ${s.id}`, `Training sample ${s.id}`) : T(`测试样本 ${s.id}`, `Test sample ${s.id}`)), hint: s.set === 'train' ? ['点击选择并标注', 'Click to select and label'] : ['点击送去测试', 'Click to send for testing'], onClick: () => this.ui.onSample(s.id) });
       return card;
     };
     this.dataset.train.forEach((s, i) => {
@@ -325,12 +326,12 @@ export class AITrainingScene extends BaseScene {
       ctx.font = `700 ${H * 0.12}px ${FONT_CN}`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
-      const title = { idle: '等待训练数据', training: '正在训练…', done: '训练完成', error: '训练失败' }[info.state];
+      const title = { idle: T('等待训练数据', 'Waiting for training data'), training: T('正在训练…', 'Training…'), done: T('训练完成', 'Training complete'), error: T('训练失败', 'Training failed') }[info.state];
       ctx.fillText(title, W * 0.06, H * 0.17);
       ctx.font = `500 ${H * 0.085}px ${FONT_CN}`;
       ctx.fillStyle = '#E8F1EC';
       if (info.state === 'idle') {
-        ctx.fillText('标注样本后点击“开始训练”', W * 0.06, H * 0.34);
+        ctx.fillText(T('标注样本后点击“开始训练”', 'Label the samples, then start training'), W * 0.06, H * 0.34, W * 0.88);
         return;
       }
       if (info.state === 'error') {
@@ -338,8 +339,8 @@ export class AITrainingScene extends BaseScene {
         ctx.fillText(String(info.message || '').slice(0, 22), W * 0.06, H * 0.34);
         return;
       }
-      ctx.fillText(`第 ${info.epoch}/${info.total} 轮   损失 ${info.loss.toFixed(3)}`, W * 0.06, H * 0.32);
-      ctx.fillText(`训练集正确率 ${(info.acc * 100).toFixed(0)}%   样本 ${info.samples}`, W * 0.06, H * 0.44);
+      ctx.fillText(T(`第 ${info.epoch}/${info.total} 轮   损失 ${info.loss.toFixed(3)}`, `Round ${info.epoch}/${info.total}   loss ${info.loss.toFixed(3)}`), W * 0.06, H * 0.32, W * 0.88);
+      ctx.fillText(T(`训练集正确率 ${(info.acc * 100).toFixed(0)}%   样本 ${info.samples}`, `Training accuracy ${(info.acc * 100).toFixed(0)}%   samples ${info.samples}`), W * 0.06, H * 0.44, W * 0.88);
       // 真实的损失曲线
       const hist = info.history || [];
       const x0 = W * 0.06;
@@ -372,25 +373,25 @@ export class AITrainingScene extends BaseScene {
       ctx.textBaseline = 'middle';
       ctx.fillStyle = COLORS.inkSoft;
       ctx.font = `600 ${H * 0.11}px ${FONT_CN}`;
-      ctx.fillText('预测结果显示屏', W / 2, H * 0.13);
+      ctx.fillText(T('预测结果显示屏', 'Prediction display'), W / 2, H * 0.13, W * 0.94);
       if (!r) {
         ctx.fillStyle = COLORS.ink;
         ctx.font = `600 ${H * 0.12}px ${FONT_CN}`;
-        ctx.fillText('把测试样本放上平台', W / 2, H * 0.5);
+        ctx.fillText(T('把测试样本放上平台', 'Put a test sample on the platform'), W / 2, H * 0.5, W * 0.94);
         return;
       }
-      const name = { cat: '猫', dog: '狗' };
+      const name = { cat: T('猫', 'Cat'), dog: T('狗', 'Dog') };
       ctx.fillStyle = LABEL_COLOR[r.pred];
       ctx.font = `700 ${H * 0.26}px ${FONT_KAI}`;
-      ctx.fillText(`预测：${name[r.pred]}`, W / 2, H * 0.4);
+      ctx.fillText(T(`预测：${name[r.pred]}`, `Prediction: ${name[r.pred]}`), W / 2, H * 0.4, W * 0.94);
       ctx.fillStyle = COLORS.ink;
       ctx.font = `600 ${H * 0.115}px ${FONT_CN}`;
-      ctx.fillText(`置信度 ${(r.conf * 100).toFixed(0)}%    实际：${name[r.actual]}`, W / 2, H * 0.64);
+      ctx.fillText(T(`置信度 ${(r.conf * 100).toFixed(0)}%    实际：${name[r.actual]}`, `Confidence ${(r.conf * 100).toFixed(0)}%    actual: ${name[r.actual]}`), W / 2, H * 0.64, W * 0.94);
       ctx.fillStyle = r.correct ? COLORS.mintDark : COLORS.coralDark;
       roundRect(ctx, W * 0.28, H * 0.75, W * 0.44, H * 0.17, 14);
       ctx.fill();
       ctx.fillStyle = '#fff';
-      ctx.fillText(r.correct ? '预测正确' : '预测错误', W / 2, H * 0.84);
+      ctx.fillText(r.correct ? T('预测正确', 'Correct') : T('预测错误', 'Wrong'), W / 2, H * 0.84);
     });
   }
 
@@ -442,9 +443,9 @@ export class AITrainingScene extends BaseScene {
       ctx.textBaseline = 'top';
       ctx.fillText(label, X(x) + 14, Z(z + dd) - 34);
     };
-    zone(-3.65, -3.0, 3.6, 4.35, 'rgba(135,181,201,0.28)', '① 数据区：样本与标注');
-    zone(0.3, -3.3, 3.35, 2.35, 'rgba(230,161,140,0.26)', '② 训练区');
-    zone(1.05, -0.2, 2.6, 3.75, 'rgba(184,214,191,0.42)', '③ 测试区');
+    zone(-3.65, -3.0, 3.6, 4.35, 'rgba(135,181,201,0.28)', T('① 数据区：样本与标注', '① Data: samples & labels'));
+    zone(0.3, -3.3, 3.35, 2.35, 'rgba(230,161,140,0.26)', T('② 训练区', '② Training'));
+    zone(1.05, -0.2, 2.6, 3.75, 'rgba(184,214,191,0.42)', T('③ 测试区', '③ Testing'));
     // 流程箭头
     ctx.strokeStyle = 'rgba(52,67,74,0.45)';
     ctx.fillStyle = 'rgba(52,67,74,0.45)';

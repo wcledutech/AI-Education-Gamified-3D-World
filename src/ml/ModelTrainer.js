@@ -2,6 +2,7 @@
 // 训练数据完全来自传入的 items（学生当前的标注），不使用任何预设结果。
 import { INPUT } from './DatasetManager.js';
 import { nextFrame } from '../utils/frame.js';
+import { T } from '../utils/i18n.js';
 
 let tfPromise = null;
 /** 按需加载 TensorFlow.js，并选择可用的计算后端 */
@@ -71,8 +72,8 @@ export class ModelTrainer {
    * @param onEpoch (epoch, total, loss, acc) 每轮训练结束时回调（真实数值）
    */
   async train(items, { epochs = 44, onEpoch } = {}) {
-    if (this.training) throw new Error('模型正在训练中，请稍候。');
-    if (!items.length) throw new Error('没有可用于训练的已标注样本，请先完成数据标注。');
+    if (this.training) throw new Error(T('模型正在训练中，请稍候。', 'The model is still training. Please wait.'));
+    if (!items.length) throw new Error(T('没有可用于训练的已标注样本，请先完成数据标注。', 'There are no labeled samples to train on. Please label the data first.'));
     this.training = true;
     const t0 = performance.now();
     let xs;
@@ -149,7 +150,7 @@ export class ModelTrainer {
 
   /** 对一组样本做预测；返回每张图的猫 / 狗概率 */
   async predict(ids) {
-    if (!this.model) throw new Error('模型尚未训练，无法测试。');
+    if (!this.model) throw new Error(T('模型尚未训练，无法测试。', 'The model has not been trained yet, so it cannot be tested.'));
     const tf = this.tf;
     const data = new Float32Array(ids.length * INPUT * INPUT * 3);
     ids.forEach((id, i) => data.set(this.dataset.get(id).pixels, i * INPUT * INPUT * 3));

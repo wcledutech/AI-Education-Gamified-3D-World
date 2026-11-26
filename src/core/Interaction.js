@@ -1,6 +1,7 @@
 // 三维点击检测：Raycaster + 悬停轮廓 + 悬停提示。区分“拖动视角”和“单击对象”。
 import * as THREE from 'three';
 import { setHover } from '../utils/three-helpers.js';
+import { tx } from '../utils/i18n.js';
 
 export class Interaction {
   constructor(dom, camera, tooltipEl) {
@@ -36,7 +37,7 @@ export class Interaction {
   }
 
   /** 注册一个可点击对象；返回注销函数 */
-  add(root, { label = '', onClick, hint = '点击查看' } = {}) {
+  add(root, { label = '', onClick, hint = ['点击查看', 'Click to view'] } = {}) {
     const t = { root, label, onClick, hint, active: true };
     root.userData.interactive = t;
     this.targets.push(t);
@@ -75,8 +76,9 @@ export class Interaction {
     if (t) setHover(t.root, true);
     this.dom.style.cursor = t ? 'pointer' : '';
     if (this.tooltip) {
-      if (t && t.label) {
-        this.tooltip.innerHTML = `<b>${t.label}</b><span>${t.hint}</span>`;
+      const label = t && tx(t.label);
+      if (label) {
+        this.tooltip.innerHTML = `<b>${label}</b><span>${tx(t.hint)}</span>`;
         this.tooltip.classList.add('show');
       } else this.tooltip.classList.remove('show');
     }
